@@ -1,15 +1,15 @@
 {
-  "name": "vue-tri-state-checkbox",
+  "name": "heatmap-calendar-component",
   "private": false,
-  "version": "1.0.0",
+  "version": "0.4.1",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MatijaNovosel/tri-state-checkbox.git"
+    "url": ""
   },
   "keywords": [
     "checkbox",
-    "vue-tri-state-checkbox",
+    "heatmap-calendar-component",
     "material",
     "material-ui",
     "vue3",
@@ -20,13 +20,13 @@
     "dist",
     "src/components/"
   ],
-  "main": "./dist/vue-tri-state-checkbox.umd.cjs",
-  "module": "./dist/vue-tri-state-checkbox.js",
+  "main": "./dist/heatmap-calendar-component.umd.cjs",
+  "module": "./dist/heatmap-calendar-component.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/vue-tri-state-checkbox.js",
-      "require": "./dist/vue-tri-state-checkbox.umd.cjs"
+      "import": "./dist/heatmap-calendar-component.js",
+      "require": "./dist/heatmap-calendar-component.umd.cjs"
     },
     "./dist/style.css": {
       "import": "./dist/style.css",
@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "sass": "^1.62.1",
+    "vite-plugin-css-injected-by-js": "^3.5.1",
     "vue": "^3.2.47"
   },
   "peerDependencies": {

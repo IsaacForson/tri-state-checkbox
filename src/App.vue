@@ -1,10 +1,15 @@
 <template>
-  <tri-state-checkbox v-model="val" label="Vite + Vue" />
+  <HeatmapCalendar v-model="val" label="Vite + Vue" />
 </template>
 
 <script setup lang="ts">
+//@ts-ignore
 import { ref } from "vue";
-import TriStateCheckbox from "./components/TriStateCheckbox.vue";
+import HeatmapCalendar from "./components/HeatmapCalendar.vue";
 
 const val = ref(false);
+
+components: {
+  HeatmapCalendar
+  }
 </script>

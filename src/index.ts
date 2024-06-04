@@ -1,3 +1,3 @@
-import TriStateCheckbox from "./components/TriStateCheckbox.vue";
+import HeatmapCalendar from "./components/HeatmapCalendar.vue";
 
-export { TriStateCheckbox };
+export { HeatmapCalendar };
