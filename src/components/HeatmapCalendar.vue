@@ -202,22 +202,47 @@ export default {
       document.removeEventListener('click', handleClickOutside);
     });
 
-    const isValidDateRange = computed(() => {
-      // Check if dateRange is empty or not a valid date
+   /*  const isValidDateRange = computed(() => {
       if (!dateRange.value || isNaN(Date.parse(dateRange.value))) {
         return false;
       }
-
-      // Further validation logic if needed
-
       return true;
-    });
+    }); */
+
+    const isValidDateRange = computed(() => {
+  if (!dateRange.value) {
+    return false;
+  }
+  const [startStr, endStr] = dateRange.value.split(" - ");
+  const start = new Date(startStr);
+  const end = endStr ? new Date(endStr) : null;
+  if (isNaN(start.getTime())) {
+    return false;
+  }
+  if (end && (isNaN(end.getTime()) || end < start)) {
+    return false;
+  }
+  return true;
+});
 
     const toggleDatePickerVisibility = () => {
       showDatePicker.value = !showDatePicker.value;
     };
 
     const handleDateInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value;
+  console.log("dateRange value:", value);
+  const dates = value.split(" - ");
+  if (dates.length === 2) {
+    const start = new Date(dates[0]);
+    const end = new Date(dates[1]);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      startDate.value = start;
+      endDate.value = end;
+    }
+  }
+};
+   /*  const handleDateInput = (event: Event) => {
       const value = (event.target as HTMLInputElement).value;
       const dates = value.split(" - ");
       if (dates.length === 2) {
@@ -228,7 +253,7 @@ export default {
           endDate.value = end;
         }
       }
-    };
+    }; */
 
     const toggleDatePicker = () => {
       showDatePicker.value = true;
@@ -369,6 +394,30 @@ export default {
       ).length;
     });
 
+    /* const applyDateRange = () => {
+  let period = "range";
+  let date = "";
+
+  if (startDate.value && endDate.value) {
+    console.log("Start Date:", startDate.value);
+    console.log("End Date:", endDate.value);
+    date = `${startDate.value.toISOString().split("T")[0]} - ${endDate.value.toISOString().split("T")[0]}`;
+  } else if (startDate.value) {
+    console.log("Single Date:", startDate.value);
+    period = "day";
+    date = startDate.value.toISOString().split("T")[0];
+  }
+
+  appliedDateRange.value = date;
+  toggleDatePickerVisibility();
+
+  const data = {
+    period,
+    date,
+  };
+
+  emit("on-filter-date-change", data);
+}; */
     const applyDateRange = () => {
       let period = "range";
       let date = "";
@@ -538,7 +587,7 @@ export default {
 
 .new_calendar_date_range_picker {
   position: absolute;
-  top: 72px;
+  top: 9px;
   /* top: 0; */
   flex-direction: column;
   align-items: center;
@@ -552,7 +601,7 @@ export default {
 .new_calendar_toggle_button {
   display: flex;
   align-items: center;
-  border-radius: 6px;
+  border-radius: 10px;
   border: 1px solid var(--Grey-200, #e6e7e8);
   padding: 10px;
   background: var(--Grey-White, #fff);
@@ -561,7 +610,7 @@ export default {
   font-size: 13px;
   font-style: normal;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 24px;
   /* 142.857% */
   letter-spacing: -0.05px;
   cursor: pointer;
@@ -616,8 +665,11 @@ export default {
   font-size: 12px !important;
   font-weight: 500 !important;
   border-bottom: none !important;
-  height: 0px !important;
+  height: auto !important;
+  margin-bottom: 0px !important;
 }
+
+
 
 .new_calendar_date_input:focus {
   outline: none;
