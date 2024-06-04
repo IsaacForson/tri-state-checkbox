@@ -1,43 +1,23 @@
 <template>
   <div>
-    <button
-      @click="toggleDatePickerVisibility"
-      class="new_calendar_toggle_button" 
-      ref="dateInput"
-    >
-      <svg
-        style="margin-right: 10px"
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
+    <button @click="toggleDatePickerVisibility" class="new_calendar_toggle_button" ref="dateInput">
+      <svg style="margin-right: 10px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none">
         <path
           d="M7.25 17.5534V17.4688M12.3125 17.5534V17.4688M12.3125 12.9688V12.8842M16.8125 12.9688V12.8842M3.875 8.46875H19.625M5.91071 2V3.68771M17.375 2V3.6875M17.375 3.6875H6.125C4.26104 3.6875 2.75 5.19854 2.75 7.0625V18.3126C2.75 20.1766 4.26104 21.6876 6.125 21.6876H17.375C19.239 21.6876 20.75 20.1766 20.75 18.3126L20.75 7.0625C20.75 5.19854 19.239 3.6875 17.375 3.6875Z"
-          stroke="#4D5861"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+          stroke="#4D5861" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       {{ appliedDateRange }}
       <span class="calendar_toggle_btn" v-if="appliedHasBookedDaysInRange">
-        &lt;/&gt; {{ appliedBookedDaysCount }}</span
-      >
+        &lt;/&gt; {{ appliedBookedDaysCount }}</span>
     </button>
 
     <div class="new_calendar_wrapper">
       <div class="new_calendar_date_range_picker" v-show="showDatePicker" ref="datePicker">
         <div class="new_calendar_header">
           <div class="new_calendar_input_wrapper">
-            <input
-              type="text"
-              v-model="dateRange"
-              @focus="toggleDatePicker"
-              @input="handleDateInput"
-              class="new_calendar_date_input"
-            />
+            <input type="text" v-model="dateRange" @focus="toggleDatePicker" @input="handleDateInput"
+              class="new_calendar_date_input" />
             <button id="new_calendar_code_counter">
               &lt;/&gt;
               <span style="padding-left: 2px"> {{ bookedDaysCount }}</span>
@@ -47,39 +27,15 @@
             <button @click="clearDates">×</button>
             <div style="display: flex; align-items: center; margin-left: auto">
               <button class="new_calendar_date_picker_arrows">
-                <svg
-                  @click="prevMonth"
-                  class="new_calendar_arrow"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path
-                    d="M12.5 15L7.5 10L12.5 5"
-                    stroke="#34404B"
-                    stroke-width="1.5"
-                    stroke-linecap="square"
-                    stroke-linejoin="round"
-                  />
+                <svg @click="prevMonth" class="new_calendar_arrow" xmlns="http://www.w3.org/2000/svg" width="20"
+                  height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M12.5 15L7.5 10L12.5 5" stroke="#34404B" stroke-width="1.5" stroke-linecap="square"
+                    stroke-linejoin="round" />
                 </svg>
-                <svg
-                  @click="nextMonth"
-                  class="new_calendar_arrow"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path
-                    d="M7.5 15L12.5 10L7.5 5"
-                    stroke="#34404B"
-                    stroke-width="1.5"
-                    stroke-linecap="square"
-                    stroke-linejoin="round"
-                  />
+                <svg @click="nextMonth" class="new_calendar_arrow" xmlns="http://www.w3.org/2000/svg" width="20"
+                  height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M7.5 15L12.5 10L7.5 5" stroke="#34404B" stroke-width="1.5" stroke-linecap="square"
+                    stroke-linejoin="round" />
                 </svg>
               </button>
               <button @click="selectToday" id="new_calendar_select_today">
@@ -96,39 +52,25 @@
                 <span>{{ startMonth }} {{ startYear }}</span>
               </div>
               <div class="new_calendar_days_of_week">
-                <div
-                  v-for="(dayName, index) in dayNames"
-                  :key="index"
-                  class="new_calendar_day_of_week"
-                >
+                <div v-for="(dayName, index) in dayNames" :key="index" class="new_calendar_day_of_week">
                   {{ dayName }}
                 </div>
               </div>
               <div class="new_calendar_days">
-                <div
-                  class="new_calendar_day"
-                  v-for="(day, index) in daysInMonth(
-                    startYear,
-                    startMonthIndex
-                  )"
-                  :key="index"
-                  :class="{
+                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(
+                  startYear,
+                  startMonthIndex
+                )" :key="index" :class="{
                     selected: isSelected(Number(day), startMonthIndex),
                     highlighted: isHighlighted(Number(day), startMonthIndex),
                     'start-date': isStartDate(Number(day), startMonthIndex),
                     'end-date': isEndDate(Number(day), startMonthIndex),
                     booked: isBooked(Number(day), startMonthIndex),
-                  }"
-                  @click="selectDate(Number(day), startMonthIndex)"
-                  @mouseover="showTooltip(index)"
-                  @mouseleave="hideTooltip(index)"
-                >
+                  }" @click="selectDate(Number(day), startMonthIndex)" @mouseover="showTooltip(index)"
+                  @mouseleave="hideTooltip(index)">
                   {{ day }}
-                  <div
-                    v-if="isBooked(Number(day), startMonthIndex)"
-                    class="new_calendar_tooltip"
-                    v-show="tooltipVisible[index]"
-                  >
+                  <div v-if="isBooked(Number(day), startMonthIndex)" class="new_calendar_tooltip"
+                    v-show="tooltipVisible[index]">
                     <h6 class="new_calendar_tooltip_header">
                       Major Code Changes
                     </h6>
@@ -144,36 +86,23 @@
                 <span>{{ endMonth }} {{ endYear }}</span>
               </div>
               <div class="new_calendar_days_of_week">
-                <div
-                  v-for="(dayName, index) in dayNames"
-                  :key="index"
-                  class="new_calendar_day_of_week"
-                >
+                <div v-for="(dayName, index) in dayNames" :key="index" class="new_calendar_day_of_week">
                   {{ dayName }}
                 </div>
               </div>
               <div class="new_calendar_days">
-                <div
-                  class="new_calendar_day"
-                  v-for="(day, index) in daysInMonth(endYear, endMonthIndex)"
-                  :key="index"
+                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(endYear, endMonthIndex)" :key="index"
                   :class="{
                     selected: isSelected(Number(day), endMonthIndex),
                     highlighted: isHighlighted(Number(day), endMonthIndex),
                     'start-date': isStartDate(Number(day), endMonthIndex),
                     'end-date': isEndDate(Number(day), endMonthIndex),
                     booked: isBooked(Number(day), endMonthIndex),
-                  }"
-                  @click="selectDate(Number(day), endMonthIndex)"
-                  @mouseover="showTooltip(index)"
-                  @mouseleave="hideTooltip(index)"
-                >
+                  }" @click="selectDate(Number(day), endMonthIndex)" @mouseover="showTooltip(index)"
+                  @mouseleave="hideTooltip(index)">
                   {{ day }}
-                  <div
-                    v-if="isBooked(Number(day), endMonthIndex)"
-                    class="new_calendar_tooltip"
-                    v-show="tooltipVisible[index]"
-                  >
+                  <div v-if="isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"
+                    v-show="tooltipVisible[index]">
                     <h6 class="new_calendar_tooltip_header">
                       Major Code Changes
                     </h6>
@@ -190,11 +119,7 @@
           </p>
         </div>
         <div class="new_calendar_apply_button_wrapper">
-          <button
-            @click="applyDateRange"
-            class="new_calendar_apply_button"
-            :disabled="!isValidDateRange"
-          >
+          <button @click="applyDateRange" class="new_calendar_apply_button" :disabled="!isValidDateRange">
             Apply
           </button>
         </div>
@@ -429,7 +354,7 @@ export default {
       const start = new Date(today);
       startDate.value = start;
       endDate.value = null;
-      dateRange.value = `${formatDate(start)} - --/--/----`;
+      dateRange.value = `${formatDate(start)}`;
     };
 
     const bookedDaysCount = computed(() => {
@@ -444,14 +369,6 @@ export default {
       ).length;
     });
 
-    /* const applyDateRange = () => {
-      if (startDate.value && endDate.value) {
-        appliedDateRange.value = `${startDate.value.toLocaleDateString()} - ${endDate.value.toLocaleDateString()}`;
-      } else if (startDate.value) {
-        appliedDateRange.value = startDate.value.toLocaleDateString();
-      }
-      toggleDatePickerVisibility();
-    }; */
     const applyDateRange = () => {
       let period = "range";
       let date = "";
@@ -470,9 +387,8 @@ export default {
         period,
         date:
           period === "range"
-            ? `${startDate.value!.toISOString().split("T")[0]},${
-                endDate.value!.toISOString().split("T")[0]
-              }`
+            ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]
+            }`
             : startDate.value!.toISOString().split("T")[0],
       };
 
@@ -552,14 +468,14 @@ export default {
       return `${startString} - ${endString}`;
     };
 
-   /*  const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const datePicker = document.querySelector(".date-picker");
-
-      if (datePicker && !datePicker.contains(target) && !target.closest(".date-input")) {
-        showDatePicker.value = false;
-      }
-    }; */
+    /*  const handleClickOutside = (event: MouseEvent) => {
+       const target = event.target as HTMLElement;
+       const datePicker = document.querySelector(".date-picker");
+ 
+       if (datePicker && !datePicker.contains(target) && !target.closest(".date-input")) {
+         showDatePicker.value = false;
+       }
+     }; */
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -645,7 +561,8 @@ export default {
   font-size: 13px;
   font-style: normal;
   font-weight: 600;
-  line-height: 20px; /* 142.857% */
+  line-height: 20px;
+  /* 142.857% */
   letter-spacing: -0.05px;
   cursor: pointer;
 }
@@ -674,7 +591,7 @@ export default {
   border: 1px solid var(--Grey-200, #e6e7e8);
   background: var(--Grey-White, #fff);
   box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
-  padding: 4px 8px;
+  /* padding: 4px 8px; */
 }
 
 .new_calendar_input_wrapper {
@@ -695,9 +612,11 @@ export default {
 
 .new_calendar_date_input {
   padding: 6px;
-  border: none;
-  font-size: 12px;
-  font-weight: 500;
+  border: none !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  border-bottom: none !important;
+  height: 0px !important;
 }
 
 .new_calendar_date_input:focus {
@@ -865,7 +784,8 @@ export default {
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
-  line-height: 12px; /* 100% */
+  line-height: 12px;
+  /* 100% */
 }
 
 .new_calendar_total_code_change_text {
@@ -896,8 +816,7 @@ export default {
   font-weight: 600;
   background: var(--Primary-03-Main, #00936f);
   display: flex;
-  padding: var(--Padding-Horizontal-padding, 10px)
-    var(--Padding-Vertical-padding, 16px);
+  padding: var(--Padding-Horizontal-padding, 10px) var(--Padding-Vertical-padding, 16px);
   align-items: flex-start;
   gap: 10px;
   cursor: pointer;
