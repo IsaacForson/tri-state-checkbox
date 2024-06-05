@@ -407,6 +407,41 @@ export default {
     });
 
     const applyDateRange = () => {
+  let period = "range";
+  let date = "";
+
+  if (startDate.value && endDate.value) {
+    date = `${startDate.value.toLocaleDateString()} - ${endDate.value.toLocaleDateString()}`;
+  } else if (startDate.value) {
+    period = "day";
+    date = startDate.value.toLocaleDateString();
+  }
+
+  appliedDateRange.value = date;
+  toggleDatePickerVisibility();
+
+  const data = {
+    period,
+    date: period === "range"
+      ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]}`
+      : startDate.value!.toISOString().split("T")[0],
+  };
+
+  // Constructing the new URL with the updated date selection
+  const url = new URL(window.location.href);
+  const fragmentParams = new URLSearchParams(url.hash.substring(1));
+  fragmentParams.set('period', data.period);
+  fragmentParams.set('date', data.date);
+  // url.hash = fragmentParams.toString().replace(/%2C/g, ',');
+  // url.hash = `#${fragmentParams.toString()}`;
+  url.hash = `#${fragmentParams.toString().replace(/%2C/g, ',')}`;
+
+  // Logging the updated URL to the console
+  console.log('Updated URL:', url.toString());
+
+  emit("on-filter-date-change", data);
+};
+    /* const applyDateRange = () => {
       let period = "range";
       let date = "";
 
@@ -430,7 +465,7 @@ export default {
       };
 
       emit("on-filter-date-change", data);
-    };
+    }; */
 
     const isHighlighted = (day: number, monthIndex: number) => {
       if (!startDate.value || !endDate.value) return false;
