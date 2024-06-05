@@ -119,9 +119,12 @@
           </p>
         </div>
         <div class="new_calendar_apply_button_wrapper">
-          <button @click="applyDateRange" class="new_calendar_apply_button" :disabled="!isValidDateRange">
+          <button @click="applyDateRange" class="new_calendar_apply_button">
             Apply
           </button>
+          <!-- <button @click="applyDateRange" class="new_calendar_apply_button" :disabled="!isValidDateRange">
+            Apply
+          </button> -->
         </div>
       </div>
     </div>
@@ -159,20 +162,7 @@ export default {
     const startYear = ref(today.getFullYear());
     const endYear = ref(today.getFullYear());
     const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
+    const monthNames = [ "January","February","March","April","May","June","July","August","September","October","November","December",];
 
     const bookedDates = ref([
       new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3),
@@ -182,48 +172,99 @@ export default {
 
     const tooltipVisible: Ref<DateTooltip> = ref({});
 
-    onMounted(() => {
+   /*  onMounted(() => {
       if (endMonthIndex.value > 11) {
         endMonthIndex.value -= 12;
         endYear.value += 1;
       }
       const start = new Date(today);
       const end = new Date(today);
-      end.setDate(end.getDate() + 7);
+      end.setDate(end.getDate() + 6);
       startDate.value = start;
       endDate.value = end;
       dateRange.value = `${formatDate(start)} - ${formatDate(end)}`;
       appliedDateRange.value = dateRange.value;
 
       document.addEventListener('click', handleClickOutside);
-    });
+    }); */
+
+  onMounted(() => {
+  const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl(); // Extract dates from URL
+
+  if (endMonthIndex.value > 11) {
+    endMonthIndex.value -= 12;
+    endYear.value += 1;
+  }
+  
+  // Ensure the dates are not null
+  const start = defaultStartDate || new Date();
+  const end = defaultEndDate || new Date();
+  
+  startDate.value = start;
+  endDate.value = end;
+  dateRange.value = `${formatDate(start)} - ${formatDate(end)}`;
+  appliedDateRange.value = dateRange.value;
+
+  console.log('Default Start Date:', formatDate(start)); // Log start date
+  console.log('Default End Date:', formatDate(end)); // Log end date
+
+  document.addEventListener('click', handleClickOutside);
+});
+
+    
 
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside);
     });
+    
+    const getDefaultDatesFromUrl = () => {
+  var url = window.location.href;
+  var urlObj = new URL(url);
+  var fragment = urlObj.hash.substring(1);
+  var fragmentParams = new URLSearchParams(fragment);
+  var periodParam = fragmentParams.get('period');
 
-   /*  const isValidDateRange = computed(() => {
-      if (!dateRange.value || isNaN(Date.parse(dateRange.value))) {
-        return false;
-      }
-      return true;
-    }); */
+  var formatDate = (date: Date) => {
+    var d = new Date(date);
+    var year = d.getFullYear();
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
 
-    const isValidDateRange = computed(() => {
-  if (!dateRange.value) {
-    return false;
+  if (periodParam === 'day') {
+    // Get today
+    var today = new Date();
+    var todayFormatted = formatDate(today);
+    return { startDate: today, endDate: today };
+
+  } 
+  // Get the date 7 days ago
+  else if (periodParam === 'week') {
+    var today = new Date();
+    var date7DaysAgo = new Date();
+    date7DaysAgo.setDate(today.getDate() - 7);
+    return { startDate: date7DaysAgo, endDate: today };
+  } 
+  // Get the date in range
+  else if (periodParam === 'range') {
+    var dateRange = fragmentParams.get('date')?.split(',');
+    var startDate = dateRange ? new Date(dateRange[0]) : null;
+    var endDate = dateRange ? new Date(dateRange[1]) : null;
+    return { startDate: startDate, endDate: endDate };
+    
+  } 
+  // Get the date in month
+  else if (periodParam === 'month') {
+    var today = new Date();
+    var date30DaysAgo = new Date();
+    date30DaysAgo.setDate(today.getDate() - 30);
+    return { startDate: date30DaysAgo, endDate: today };
   }
-  const [startStr, endStr] = dateRange.value.split(" - ");
-  const start = new Date(startStr);
-  const end = endStr ? new Date(endStr) : null;
-  if (isNaN(start.getTime())) {
-    return false;
-  }
-  if (end && (isNaN(end.getTime()) || end < start)) {
-    return false;
-  }
-  return true;
-});
+  return { startDate: new Date(), endDate: new Date() }; // Fallback case
+}
+
 
     const toggleDatePickerVisibility = () => {
       showDatePicker.value = !showDatePicker.value;
@@ -231,7 +272,7 @@ export default {
 
     const handleDateInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  console.log("dateRange value:", value);
+  // console.log("dateRange value:", value);
   const dates = value.split(" - ");
   if (dates.length === 2) {
     const start = new Date(dates[0]);
@@ -242,18 +283,6 @@ export default {
     }
   }
 };
-   /*  const handleDateInput = (event: Event) => {
-      const value = (event.target as HTMLInputElement).value;
-      const dates = value.split(" - ");
-      if (dates.length === 2) {
-        const start = new Date(dates[0]);
-        const end = new Date(dates[1]);
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          startDate.value = start;
-          endDate.value = end;
-        }
-      }
-    }; */
 
     const toggleDatePicker = () => {
       showDatePicker.value = true;
@@ -322,23 +351,6 @@ export default {
       }
     };
 
-    /*  const selectDate = (day: number, monthIndex: number) => {
-   if (day === 0) return;
-   const selectedDate = new Date(startYear.value, monthIndex, day);
-   if (!startDate.value || (startDate.value && endDate.value)) {
-      startDate.value = selectedDate;
-      endDate.value = null;
-   } else if (startDate.value && !endDate.value) {
-      if (selectedDate < startDate.value) {
-         endDate.value = startDate.value;
-         startDate.value = selectedDate;
-      } else {
-         endDate.value = selectedDate;
-      }
-   }
-   dateRange.value = formatRange(startDate.value, endDate.value);
-}; */
-
     const clearDates = () => {
       startDate.value = null;
       endDate.value = null;
@@ -394,30 +406,6 @@ export default {
       ).length;
     });
 
-    /* const applyDateRange = () => {
-  let period = "range";
-  let date = "";
-
-  if (startDate.value && endDate.value) {
-    console.log("Start Date:", startDate.value);
-    console.log("End Date:", endDate.value);
-    date = `${startDate.value.toISOString().split("T")[0]} - ${endDate.value.toISOString().split("T")[0]}`;
-  } else if (startDate.value) {
-    console.log("Single Date:", startDate.value);
-    period = "day";
-    date = startDate.value.toISOString().split("T")[0];
-  }
-
-  appliedDateRange.value = date;
-  toggleDatePickerVisibility();
-
-  const data = {
-    period,
-    date,
-  };
-
-  emit("on-filter-date-change", data);
-}; */
     const applyDateRange = () => {
       let period = "range";
       let date = "";
@@ -517,15 +505,6 @@ export default {
       return `${startString} - ${endString}`;
     };
 
-    /*  const handleClickOutside = (event: MouseEvent) => {
-       const target = event.target as HTMLElement;
-       const datePicker = document.querySelector(".date-picker");
- 
-       if (datePicker && !datePicker.contains(target) && !target.closest(".date-input")) {
-         showDatePicker.value = false;
-       }
-     }; */
-
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (
@@ -571,10 +550,10 @@ export default {
       formatDate,
       formatRange,
       updateDateRange,
-      isValidDateRange,
       handleClickOutside,
       datePicker,
       dateInput,
+      getDefaultDatesFromUrl
     };
   },
 };
@@ -588,7 +567,6 @@ export default {
 .new_calendar_date_range_picker {
   position: absolute;
   top: 9px;
-  /* top: 0; */
   flex-direction: column;
   align-items: center;
   width: 480px;
@@ -611,7 +589,6 @@ export default {
   font-style: normal;
   font-weight: 600;
   line-height: 24px;
-  /* 142.857% */
   letter-spacing: -0.05px;
   cursor: pointer;
 }
@@ -624,7 +601,6 @@ export default {
   font-size: 12px;
   color: #fff;
   font-weight: 700;
-  /* display: flex; */
   margin-left: 10px;
 }
 
@@ -640,7 +616,6 @@ export default {
   border: 1px solid var(--Grey-200, #e6e7e8);
   background: var(--Grey-White, #fff);
   box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
-  /* padding: 4px 8px; */
 }
 
 .new_calendar_input_wrapper {
@@ -762,7 +737,6 @@ export default {
 
 .new_calendar_day.selected {
   background: #03c191;
-  /* color: #fff; */
 }
 
 .new_calendar_day.highlighted {
@@ -775,7 +749,6 @@ export default {
 }
 
 .new_calendar_day.end-date {
-  /* background-color: red; */
   border-radius: 0px 12px 12px 0px;
   background: #03c191;
 }
@@ -805,7 +778,6 @@ export default {
   background: #fff;
   color: #000;
   padding: 10px;
-  /* border: 1px solid #ddd; */
   z-index: 999;
   display: none;
   text-align: start;
@@ -837,7 +809,6 @@ export default {
   font-style: normal;
   font-weight: 400;
   line-height: 12px;
-  /* 100% */
 }
 
 .new_calendar_total_code_change_text {
@@ -855,7 +826,6 @@ export default {
   display: flex;
   justify-content: end;
   border-top: 2px solid #e6e7e8;
-  /* margin-top: 5px; */
   padding-top: 10px;
 }
 
