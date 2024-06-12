@@ -122,9 +122,6 @@
           <button @click="applyDateRange" class="new_calendar_apply_button">
             Apply
           </button>
-          <!-- <button @click="applyDateRange" class="new_calendar_apply_button" :disabled="!isValidDateRange">
-            Apply
-          </button> -->
         </div>
       </div>
     </div>
@@ -134,6 +131,7 @@
 //@ts-ignore
 import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits } from "vue";
 
+
 interface DateTooltip {
   [key: number]: boolean;
 }
@@ -141,8 +139,14 @@ interface DateTooltip {
 export default {
   name: "CalendarModal",
   emits: ["on-filter-date-change"],
+  props: {
+    MatomoUrl: {
+      type: Object,
+      required: true
+    }
+  },
   //@ts-ignore
-  setup(_, { emit }) {
+  setup(props, { emit }) {
     const showDatePicker = ref(false);
     const startDate: Ref<Date | null> = ref(null);
     const endDate: Ref<Date | null> = ref(null);
@@ -164,31 +168,16 @@ export default {
     const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
     const monthNames = [ "January","February","March","April","May","June","July","August","September","October","November","December",];
 
-    const bookedDates = ref([
+    const bookedDates = ref<Date[]>([]); 
+    /* const bookedDates = ref([
       new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3),
       new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5),
       new Date(today.getFullYear(), today.getMonth(), today.getDate() + 11),
-    ]);
+    ]); */
 
     const tooltipVisible: Ref<DateTooltip> = ref({});
 
-   /*  onMounted(() => {
-      if (endMonthIndex.value > 11) {
-        endMonthIndex.value -= 12;
-        endYear.value += 1;
-      }
-      const start = new Date(today);
-      const end = new Date(today);
-      end.setDate(end.getDate() + 6);
-      startDate.value = start;
-      endDate.value = end;
-      dateRange.value = `${formatDate(start)} - ${formatDate(end)}`;
-      appliedDateRange.value = dateRange.value;
-
-      document.addEventListener('click', handleClickOutside);
-    }); */
-
-  onMounted(() => {
+    onMounted(async () => {
   const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl(); // Extract dates from URL
 
   if (endMonthIndex.value > 11) {
@@ -205,13 +194,37 @@ export default {
   dateRange.value = `${formatDate(start)} - ${formatDate(end)}`;
   appliedDateRange.value = dateRange.value;
 
-  console.log('Default Start Date:', formatDate(start)); // Log start date
-  console.log('Default End Date:', formatDate(end)); // Log end date
+  console.log('Default Start Date:', formatDate(start));
+  console.log('Default End Date:', formatDate(end));
 
   document.addEventListener('click', handleClickOutside);
+
+  await loadWebVariants(); // Fetch booked dates from the API
 });
 
-    
+//  Defined loadWebVariants function 
+async function loadWebVariants() {
+  const currentPageUrl = new URL(window.location.href);
+  const url = `${currentPageUrl.origin}${currentPageUrl.pathname}`; 
+  const urlParams = new URLSearchParams(window.location.search);
+  const idSite = urlParams.get('idSite');
+  const idSiteHsr = urlParams.get('subcategory');
+  // const MatomoUrl = props.Matomo;
+  const MatomoUrl = props.MatomoUrl;
+  const variantPath = `${url}?module=API&format=json&idSiteHsr=${idSiteHsr}&idSite=${idSite}&variantId=${MatomoUrl.parsed.value.variantId ? MatomoUrl.parsed.value.variantId : ''}&method=HeatmapSessionRecording.loadWebVariants`;
+
+  try {
+    const response = await fetch(variantPath);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    bookedDates.value = data.bookedDates.map((dateString: string) => new Date(dateString));
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside);
@@ -224,19 +237,8 @@ export default {
   var fragmentParams = new URLSearchParams(fragment);
   var periodParam = fragmentParams.get('period');
 
-  var formatDate = (date: Date) => {
-    var d = new Date(date);
-    var year = d.getFullYear();
-    var month = String(d.getMonth() + 1).padStart(2, '0');
-    var day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-  
-
   if (periodParam === 'day') {
-    // Get today
     var today = new Date();
-    var todayFormatted = formatDate(today);
     return { startDate: today, endDate: today };
 
   } 
@@ -262,7 +264,7 @@ export default {
     date30DaysAgo.setDate(today.getDate() - 30);
     return { startDate: date30DaysAgo, endDate: today };
   }
-  return { startDate: new Date(), endDate: new Date() }; // Fallback case
+  return { startDate: new Date(), endDate: new Date() };
 }
 
 
@@ -272,7 +274,6 @@ export default {
 
     const handleDateInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  // console.log("dateRange value:", value);
   const dates = value.split(" - ");
   if (dates.length === 2) {
     const start = new Date(dates[0]);
@@ -406,7 +407,7 @@ export default {
       ).length;
     });
 
-    const applyDateRange = () => {
+const applyDateRange = () => {
   let period = "range";
   let date = "";
 
@@ -429,43 +430,27 @@ export default {
 
   // Constructing the new URL with the updated date selection
   const url = new URL(window.location.href);
-  const fragmentParams = new URLSearchParams(url.hash.substring(1));
+  const fragment = url.hash.substring(1);
+  const fragmentParams = new URLSearchParams(fragment);
+
+  // Remove the leading `/` if present
+  if (fragment.startsWith('/')) {
+    fragmentParams.delete('');
+  }
+
   fragmentParams.set('period', data.period);
   fragmentParams.set('date', data.date);
-  // url.hash = fragmentParams.toString().replace(/%2C/g, ',');
-  // url.hash = `#${fragmentParams.toString()}`;
-  url.hash = `#${fragmentParams.toString().replace(/%2C/g, ',')}`;
+
+  // Construct the final hash with a leading `?`
+  url.hash = `?${fragmentParams.toString().replace(/%2C/g, ',')}`;
 
   // Logging the updated URL to the console
   console.log('Updated URL:', url.toString());
 
-  emit("on-filter-date-change", data);
+  // emit("on-filter-date-change", data);
+   // Emitting the updated URL along with the other data
+   emit("on-filter-date-change", { ...data, url: url.toString() });
 };
-    /* const applyDateRange = () => {
-      let period = "range";
-      let date = "";
-
-      if (startDate.value && endDate.value) {
-        date = `${startDate.value.toLocaleDateString()} - ${endDate.value.toLocaleDateString()}`;
-      } else if (startDate.value) {
-        period = "day";
-        date = startDate.value.toLocaleDateString();
-      }
-
-      appliedDateRange.value = date;
-      toggleDatePickerVisibility();
-
-      const data = {
-        period,
-        date:
-          period === "range"
-            ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]
-            }`
-            : startDate.value!.toISOString().split("T")[0],
-      };
-
-      emit("on-filter-date-change", data);
-    }; */
 
     const isHighlighted = (day: number, monthIndex: number) => {
       if (!startDate.value || !endDate.value) return false;
@@ -588,7 +573,8 @@ export default {
       handleClickOutside,
       datePicker,
       dateInput,
-      getDefaultDatesFromUrl
+      getDefaultDatesFromUrl,
+      loadWebVariants,
     };
   },
 };
