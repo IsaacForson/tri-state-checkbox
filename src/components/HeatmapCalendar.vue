@@ -16,8 +16,8 @@
       <div class="new_calendar_date_range_picker" v-show="showDatePicker" ref="datePicker">
         <div class="new_calendar_header">
           <div class="new_calendar_input_wrapper">
-            <input type="text" v-model="dateRange" @focus="toggleDatePicker" @input="handleDateInput"
-              class="new_calendar_date_input" />
+            <input type="date" v-model="dateInputs.start" @input="handleStartDateInput" class="new_calendar_date_input" /> <span> - </span>
+            <input type="date" v-model="dateInputs.end" @input="handleEndDateInput" class="new_calendar_date_input" />
             <button id="new_calendar_code_counter">
               &lt;/&gt;
               <span style="padding-left: 2px"> {{ bookedDaysCount }}</span>
@@ -125,7 +125,7 @@
 </template>
 <script lang="ts">
 //@ts-ignore
-import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits } from "vue";
+import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits, reactive } from "vue";
 
 interface DateTooltip {
   [key: number]: boolean;
@@ -145,6 +145,8 @@ export default {
     const showDatePicker = ref(false);
     const startDate: Ref<Date | null> = ref(null);
     const endDate: Ref<Date | null> = ref(null);
+    const startDateInput = ref('');
+    const endDateInput = ref('');
     const datePicker = ref<HTMLElement | null>(null);
     const dateInput = ref<HTMLElement | null>(null);
     const currentUrl = ref(window.location.href);
@@ -186,6 +188,26 @@ export default {
 
   await loadWebVariants(); // Fetch booked dates from the API
 });
+
+const dateInputs = reactive({
+  start: '',
+  end: ''
+});
+
+const handleStartDateInput = () => {
+  if (dateInputs.start) {
+    startDate.value = new Date(dateInputs.start);
+    updateDateRange();
+  }
+};
+
+const handleEndDateInput = () => {
+  if (dateInputs.end) {
+    endDate.value = new Date(dateInputs.end);
+    updateDateRange();
+  }
+};
+
 
 // getting items using url
 const getItemFromUrl = (item: string) => {
@@ -337,38 +359,59 @@ const getChangeDescription = (day: number, monthIndex: number) => {
 
     // selecting date on the calendar
     const selectDate = (day: number, monthIndex: number) => {
-      if (typeof day !== "number" || day === 0) return;
-      const date = new Date(startYear.value, monthIndex, day);
-      if (!startDate.value) {
-        startDate.value = date;
-      } else if (!endDate.value) {
-        endDate.value = date;
-        if (endDate.value < startDate.value) {
-          [startDate.value, endDate.value] = [endDate.value, startDate.value];
-        }
-      } else {
-        startDate.value = date;
-        endDate.value = null;
-      }
-      updateDateRange();
-    };
+  if (typeof day !== "number" || day === 0) return;
+  const selectedYear = monthIndex < startMonthIndex.value ? endYear.value : startYear.value;
+  const date = new Date(selectedYear, monthIndex, day);
+  if (!startDate.value) {
+    startDate.value = date;
+  } else if (!endDate.value) {
+    endDate.value = date;
+    if (endDate.value < startDate.value) {
+      [startDate.value, endDate.value] = [endDate.value, startDate.value];
+    }
+  } else {
+    startDate.value = date;
+    endDate.value = null;
+  }
+  updateDateRange();
+};
 
     // updating date rannge on the calendar
-    const updateDateRange = () => {
-      if (startDate.value) {
-        dateRange.value = startDate.value.toLocaleDateString();
-        if (endDate.value) {
-          dateRange.value += " - " + endDate.value.toLocaleDateString();
-        }
-      }
-    };
+   /*  const updateDateRange = () => {
+  if (startDate.value) {
+    startDateInput.value = startDate.value.toISOString().split('T')[0];
+    dateRange.value = formatDate(startDate.value);
+    if (endDate.value) {
+      endDateInput.value = endDate.value.toISOString().split('T')[0];
+      dateRange.value += " - " + formatDate(endDate.value);
+    }
+  }
+}; */
+const updateDateRange = () => {
+  if (startDate.value) {
+    dateInputs.start = startDate.value.toISOString().split('T')[0];
+    dateRange.value = formatDate(startDate.value);
+    if (endDate.value) {
+      dateInputs.end = endDate.value.toISOString().split('T')[0];
+      dateRange.value += " - " + formatDate(endDate.value);
+    } else {
+      dateInputs.end = '';
+    }
+  } else {
+    dateInputs.start = '';
+    dateInputs.end = '';
+    dateRange.value = "";
+  }
+};
 
     // button that clears all date range text from input field
     const clearDates = () => {
-      startDate.value = null;
-      endDate.value = null;
-      dateRange.value = "--/--/---- - --/--/----";
-    };
+  startDate.value = null;
+  endDate.value = null;
+  dateInputs.start = '';
+  dateInputs.end = '';
+  dateRange.value = "";
+};
 
     // arrow button for showing previous months
     const prevMonth = () => {
@@ -472,38 +515,43 @@ const getChangeDescription = (day: number, monthIndex: number) => {
 };
 
 // highlighting selected date range
-    const isHighlighted = (day: number, monthIndex: number) => {
-      if (!startDate.value || !endDate.value) return false;
-      const selectedDate = new Date(startYear.value, monthIndex, day);
-      return selectedDate > startDate.value && selectedDate < endDate.value;
-    };
+const isHighlighted = (day: number, monthIndex: number) => {
+  if (!startDate.value || !endDate.value) return false;
+  const year = monthIndex < startMonthIndex.value ? endYear.value : startYear.value;
+  const selectedDate = new Date(year, monthIndex, day);
+  return selectedDate > startDate.value && selectedDate < endDate.value;
+};
 
     // begining od date range
     const isStartDate = (day: number, month: number) => {
-      return (
-        startDate.value &&
-        startDate.value.getDate() === day &&
-        startDate.value.getMonth() === month
-      );
-    };
+  const year = month < startMonthIndex.value ? endYear.value : startYear.value;
+  return (
+    startDate.value &&
+    startDate.value.getDate() === day &&
+    startDate.value.getMonth() === month &&
+    startDate.value.getFullYear() === year
+  );
+};
 
-    const isEndDate = (day: number, month: number) => {
-      return (
-        endDate.value &&
-        endDate.value.getDate() === day &&
-        endDate.value.getMonth() === month
-      );
-    };
-
+const isEndDate = (day: number, month: number) => {
+  const year = month < startMonthIndex.value ? endYear.value : startYear.value;
+  return (
+    endDate.value &&
+    endDate.value.getDate() === day &&
+    endDate.value.getMonth() === month &&
+    endDate.value.getFullYear() === year
+  );
+};
     const isSelected = (day: number, month: number) => {
-      const date = new Date(startYear.value, month, day);
-      return (
-        startDate.value &&
-        endDate.value &&
-        date >= startDate.value &&
-        date <= endDate.value
-      );
-    };
+  const year = month < startMonthIndex.value ? endYear.value : startYear.value;
+  const date = new Date(year, month, day);
+  return (
+    startDate.value &&
+    endDate.value &&
+    date >= startDate.value &&
+    date <= endDate.value
+  );
+};
 
     const formatDate = (date: Date) => {
       const day = date.getDate();
@@ -599,6 +647,11 @@ const getChangeDescription = (day: number, monthIndex: number) => {
       loadWebVariants,
       getChangeDescription,
       getItemFromUrl,
+      handleStartDateInput,
+      handleEndDateInput,
+      startDateInput,
+      endDateInput,
+      dateInputs
     };
   },
 };
@@ -671,6 +724,10 @@ const getChangeDescription = (day: number, monthIndex: number) => {
   padding: 4px;
   border: 1px solid #ddd;
   border-radius: 4px;
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+  }
 }
 
 .new_calendar_header {
