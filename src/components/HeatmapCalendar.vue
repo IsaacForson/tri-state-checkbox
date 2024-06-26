@@ -115,7 +115,7 @@
           </p>
         </div>
         <div class="new_calendar_apply_button_wrapper">
-          <button @click="applyDateRange" class="new_calendar_apply_button">
+          <button @click="applyDateRange" class="new_calendar_apply_button"   :disabled="isApplyDisabled">
             Apply
           </button>
         </div>
@@ -134,12 +134,6 @@ interface DateTooltip {
 export default {
   name: "CalendarModal",
   emits: ["on-filter-date-change"],
-  props: {
-    MatomoUrl: {
-      type: Object,
-      required: true
-    }
-  },
   //@ts-ignore
   setup(props, { emit }) {
     const showDatePicker = ref(false);
@@ -615,6 +609,10 @@ const isEndDate = (day: number, month: number) => {
       }
     };
 
+    const isApplyDisabled = computed(() => {
+  return !startDate.value && !endDate.value;
+});
+
     return {
       showDatePicker,
       toggleDatePickerVisibility,
@@ -663,7 +661,8 @@ const isEndDate = (day: number, month: number) => {
       handleEndDateInput,
       startDateInput,
       endDateInput,
-      dateInputs
+      dateInputs,
+      isApplyDisabled
     };
   },
 };
@@ -956,5 +955,10 @@ const isEndDate = (day: number, month: number) => {
   align-items: flex-start;
   gap: 10px;
   cursor: pointer;
+}
+
+.new_calendar_apply_button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
