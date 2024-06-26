@@ -70,14 +70,12 @@
                   @mouseleave="hideTooltip(index)">
                   {{ day }}
                   <div v-if="isBooked(Number(day), startMonthIndex)" class="new_calendar_tooltip"
-                    v-show="tooltipVisible[index]">
-                    <h6 class="new_calendar_tooltip_header">
-                      Major Code Changes
-                    </h6>
-                    <li class="new_calendar_tooltip_list">Hero Image</li>
-                    <li class="new_calendar_tooltip_list">Product Tiles (3)</li>
-                    <li class="new_calendar_tooltip_list">Footer Links</li>
-                  </div>
+                  v-show="tooltipVisible[index]">
+                  <h6 class="new_calendar_tooltip_header">
+                    Major Code Changes
+                  </h6>
+                  <p class="new_calendar_tooltip_list">{{ getChangeDescription(Number(day), startMonthIndex) }}</p>
+                </div>
                 </div>
               </div>
             </div>
@@ -101,21 +99,19 @@
                   }" @click="selectDate(Number(day), endMonthIndex)" @mouseover="showTooltip(index)"
                   @mouseleave="hideTooltip(index)">
                   {{ day }}
-                  <div v-if="isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"
-                    v-show="tooltipVisible[index]">
-                    <h6 class="new_calendar_tooltip_header">
-                      Major Code Changes
-                    </h6>
-                    <li class="new_calendar_tooltip_list">Hero Image</li>
-                    <li class="new_calendar_tooltip_list">Product Tiles (3)</li>
-                    <li class="new_calendar_tooltip_list">Footer Links</li>
-                  </div>
+                  <div v-if="isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"  v-show="tooltipVisible[index]">
+                  <h6 class="new_calendar_tooltip_header">
+                    Major Code Changes
+                  </h6>
+                  <p class="new_calendar_tooltip_list">{{ getChangeDescription(Number(day), endMonthIndex) }}</p>
+                </div>
                 </div>
               </div>
             </div>
           </div>
           <p class="new_calendar_total_code_change_text">
-            25 Total Code Changes (to date) <span>&#63;</span>
+            <!-- 25 Total Code Changes (to date) <span>&#63;</span> -->
+            {{ bookedDates.length }} Total Code Changes (to date) <span>&#63;</span>
           </p>
         </div>
         <div class="new_calendar_apply_button_wrapper">
@@ -130,7 +126,6 @@
 <script lang="ts">
 //@ts-ignore
 import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits } from "vue";
-
 
 interface DateTooltip {
   [key: number]: boolean;
@@ -152,38 +147,28 @@ export default {
     const endDate: Ref<Date | null> = ref(null);
     const datePicker = ref<HTMLElement | null>(null);
     const dateInput = ref<HTMLElement | null>(null);
-
+    const currentUrl = ref(window.location.href);
     const dateRange = ref("");
     const appliedDateRange = ref("");
     const today = new Date();
-
     const startMonthIndex = ref<number>(today.getMonth());
     const endMonthIndex = ref<number>((today.getMonth() + 1) % 12);
-
     const startMonth = computed(() => monthNames[startMonthIndex.value]);
     const endMonth = computed(() => monthNames[endMonthIndex.value % 12]);
-
     const startYear = ref(today.getFullYear());
     const endYear = ref(today.getFullYear());
     const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
     const monthNames = [ "January","February","March","April","May","June","July","August","September","October","November","December",];
-
-    const bookedDates = ref<Date[]>([]); 
-    /* const bookedDates = ref([
-      new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3),
-      new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5),
-      new Date(today.getFullYear(), today.getMonth(), today.getDate() + 11),
-    ]); */
-
+    const bookedDates = ref<Date[]>([]);
+    const changeDescriptionsRef: Ref<Record<string, string>> = ref({});
     const tooltipVisible: Ref<DateTooltip> = ref({});
-
     onMounted(async () => {
-  const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl(); // Extract dates from URL
+    const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
-  if (endMonthIndex.value > 11) {
-    endMonthIndex.value -= 12;
-    endYear.value += 1;
-  }
+    if (endMonthIndex.value > 11) {
+      endMonthIndex.value -= 12;
+      endYear.value += 1;
+    }
   
   // Ensure the dates are not null
   const start = defaultStartDate || new Date();
@@ -202,45 +187,54 @@ export default {
   await loadWebVariants(); // Fetch booked dates from the API
 });
 
-//  Defined loadWebVariants function 
-async function loadWebVariants() {
-  const currentPageUrl = new URL(window.location.href);
-  const url = `${currentPageUrl.origin}${currentPageUrl.pathname}`; 
-  const urlParams = new URLSearchParams(window.location.search);
-  const idSite = urlParams.get('idSite');
-  const idSiteHsr = urlParams.get('subcategory');
-  // const MatomoUrl = props.Matomo;
-  const MatomoUrl = props.MatomoUrl;
-  const variantPath = `${url}?module=API&format=json&idSiteHsr=${idSiteHsr}&idSite=${idSite}&variantId=${MatomoUrl.parsed.value.variantId ? MatomoUrl.parsed.value.variantId : ''}&method=HeatmapSessionRecording.loadWebVariants`;
+// getting items using url
+const getItemFromUrl = (item: string) => {
+  const parsedUrl = new URL(currentUrl.value);
+  const searchParams = new URLSearchParams(parsedUrl.search);
+  const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
+  return searchParams.get(item) || hashParams.get(item);
+};
 
-  try {
-    const response = await fetch(variantPath);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    bookedDates.value = data.bookedDates.map((dateString: string) => new Date(dateString));
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
+    //  Defined loadWebVariants function 
+    async function loadWebVariants() {
+      const url = `/index.php?module=API&format=json&method=HeatmapSessionRecording.loadWebVariants&idSite=${getItemFromUrl('idSite')}&idSiteHsr=${getItemFromUrl('subcategory')}&deviceType=${getItemFromUrl('deviceType')}`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log(response);
+        bookedDates.value = data.result.map((item: any) => new Date(item.raw_date));
+
+        // storing change description for future use
+        const changeDescriptions = data.result.reduce((acc: any, item: any) => {
+          acc[item.raw_date] = item.changeDescription;
+          return acc;
+        }, {});
+        changeDescriptionsRef.value = changeDescriptions;
+        
+          console.log(data);
+        } catch (error) {
+          console.error(error);
+        }
+          }
 
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside);
     });
     
+    // getting default dates from url
     const getDefaultDatesFromUrl = () => {
-  var url = window.location.href;
-  var urlObj = new URL(url);
-  var fragment = urlObj.hash.substring(1);
-  var fragmentParams = new URLSearchParams(fragment);
-  var periodParam = fragmentParams.get('period');
+    var url = window.location.href;
+    var urlObj = new URL(url);
+    var fragment = urlObj.hash.substring(1);
+    var fragmentParams = new URLSearchParams(fragment);
+    var periodParam = fragmentParams.get('period');
 
-  if (periodParam === 'day') {
-    var today = new Date();
-    return { startDate: today, endDate: today };
-
+    if (periodParam === 'day') {
+      var today = new Date();
+      return { startDate: today, endDate: today };
   } 
   // Get the date 7 days ago
   else if (periodParam === 'week') {
@@ -267,11 +261,20 @@ async function loadWebVariants() {
   return { startDate: new Date(), endDate: new Date() };
 }
 
+// getting description from versions
+const getChangeDescription = (day: number, monthIndex: number) => {
+  const date = new Date(startYear.value, monthIndex, day);
+  const dateString = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  return changeDescriptionsRef.value[dateString] || 'No description available';
+};
 
+
+  // toggling date button (visible / hidden)
     const toggleDatePickerVisibility = () => {
       showDatePicker.value = !showDatePicker.value;
     };
 
+    // used for handling input (user will be able to type in input field)
     const handleDateInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
   const dates = value.split(" - ");
@@ -285,10 +288,12 @@ async function loadWebVariants() {
   }
 };
 
+// tooltip show on hover
     const toggleDatePicker = () => {
       showDatePicker.value = true;
     };
 
+    // creation of days of the month
     const daysInMonth = (year: number, month: number) => {
       const numDays = new Date(year, month + 1, 0).getDate();
       const firstDay = firstDayOfMonth(year, month);
@@ -305,10 +310,12 @@ async function loadWebVariants() {
       return daysArray;
     };
 
+    // selecting the first day of the month
     const firstDayOfMonth = (year: number, month: number) => {
       return new Date(year, month, 1).getDay();
     };
 
+    // checking if there is a booked day
     const isBooked = (day: number, month: number) => {
       return bookedDates.value.some(
         (bookedDate: Date) =>
@@ -318,14 +325,17 @@ async function loadWebVariants() {
       );
     };
 
+    // showing of tooltip
     const showTooltip = (index: number) => {
       tooltipVisible.value = { ...tooltipVisible.value, [index]: true };
     };
 
+    // hiding of tooltip
     const hideTooltip = (index: number) => {
       tooltipVisible.value = { ...tooltipVisible.value, [index]: false };
     };
 
+    // selecting date on the calendar
     const selectDate = (day: number, monthIndex: number) => {
       if (typeof day !== "number" || day === 0) return;
       const date = new Date(startYear.value, monthIndex, day);
@@ -343,6 +353,7 @@ async function loadWebVariants() {
       updateDateRange();
     };
 
+    // updating date rannge on the calendar
     const updateDateRange = () => {
       if (startDate.value) {
         dateRange.value = startDate.value.toLocaleDateString();
@@ -352,12 +363,14 @@ async function loadWebVariants() {
       }
     };
 
+    // button that clears all date range text from input field
     const clearDates = () => {
       startDate.value = null;
       endDate.value = null;
       dateRange.value = "--/--/---- - --/--/----";
     };
 
+    // arrow button for showing previous months
     const prevMonth = () => {
       if (startMonthIndex.value > 0) {
         startMonthIndex.value -= 1;
@@ -373,6 +386,7 @@ async function loadWebVariants() {
       }
     };
 
+    // arrow button for showing following months
     const nextMonth = () => {
       if (startMonthIndex.value < 11) {
         startMonthIndex.value += 1;
@@ -388,6 +402,7 @@ async function loadWebVariants() {
       }
     };
 
+    // button that selects only today
     const selectToday = () => {
       const start = new Date(today);
       startDate.value = start;
@@ -395,6 +410,7 @@ async function loadWebVariants() {
       dateRange.value = `${formatDate(start)}`;
     };
 
+    // total count for versions
     const bookedDaysCount = computed(() => {
       const start = startDate.value?.getTime();
       const end = endDate.value?.getTime();
@@ -407,7 +423,8 @@ async function loadWebVariants() {
       ).length;
     });
 
-const applyDateRange = () => {
+//  button that applies / save date range
+ const applyDateRange = () => {
   let period = "range";
   let date = "";
 
@@ -421,12 +438,9 @@ const applyDateRange = () => {
   appliedDateRange.value = date;
   toggleDatePickerVisibility();
 
-  const data = {
-    period,
-    date: period === "range"
-      ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]}`
-      : startDate.value!.toISOString().split("T")[0],
-  };
+  const dateValue = period === "range"
+    ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]}`
+    : startDate.value!.toISOString().split("T")[0];
 
   // Constructing the new URL with the updated date selection
   const url = new URL(window.location.href);
@@ -438,26 +452,33 @@ const applyDateRange = () => {
     fragmentParams.delete('');
   }
 
-  fragmentParams.set('period', data.period);
-  fragmentParams.set('date', data.date);
+  fragmentParams.set('period', period);
+  fragmentParams.set('date', dateValue);
 
   // Construct the final hash with a leading `?`
   url.hash = `?${fragmentParams.toString().replace(/%2C/g, ',')}`;
 
-  // Logging the updated URL to the console
-  console.log('Updated URL:', url.toString());
+  // Update the browser's URL without reloading the page
+  window.history.pushState({}, '', url.toString());
 
-  // emit("on-filter-date-change", data);
-   // Emitting the updated URL along with the other data
-   emit("on-filter-date-change", { ...data, url: url.toString() });
+  const data = {
+    period,
+    date: dateValue,
+    url: url.toString()
+  };
+
+  console.log("Emitted Data :", data);
+  emit("on-filter-date-change", {data});
 };
 
+// highlighting selected date range
     const isHighlighted = (day: number, monthIndex: number) => {
       if (!startDate.value || !endDate.value) return false;
       const selectedDate = new Date(startYear.value, monthIndex, day);
       return selectedDate > startDate.value && selectedDate < endDate.value;
     };
 
+    // begining od date range
     const isStartDate = (day: number, month: number) => {
       return (
         startDate.value &&
@@ -573,8 +594,11 @@ const applyDateRange = () => {
       handleClickOutside,
       datePicker,
       dateInput,
+      bookedDates,
       getDefaultDatesFromUrl,
       loadWebVariants,
+      getChangeDescription,
+      getItemFromUrl,
     };
   },
 };
