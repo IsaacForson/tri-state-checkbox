@@ -446,12 +446,24 @@ const updateDateRange = () => {
     };
 
     // button that selects only today
-    const selectToday = () => {
+    /* const selectToday = () => {
       const start = new Date(today);
       startDate.value = start;
       endDate.value = null;
       dateRange.value = `${formatDate(start)}`;
-    };
+    }; */
+
+    const selectToday = () => {
+  const start = new Date();
+  startDate.value = start;
+  endDate.value = null;
+  dateRange.value = `${formatDate(start)}`;
+  
+  // Update the start date input
+  dateInputs.start = start.toISOString().split('T')[0];
+  // Clear the end date input
+  dateInputs.end = '';
+};
 
     // total count for versions
     const bookedDaysCount = computed(() => {
