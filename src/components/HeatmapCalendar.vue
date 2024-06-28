@@ -16,8 +16,8 @@
       <div class="new_calendar_date_range_picker" v-show="showDatePicker" ref="datePicker">
         <div class="new_calendar_header">
           <div class="new_calendar_input_wrapper">
-            <input type="date" v-model="dateInputs.start" @input="handleStartDateInput" class="new_calendar_date_input" /> <span> - </span>
-            <input type="date" v-model="dateInputs.end" @input="handleEndDateInput" class="new_calendar_date_input" />
+            <input type="date" v-model="dateInputs.start" @input="handleStartDateInput" class="new_calendar_date_input" id="new_calendar_left_input" /> <span> - </span>
+            <input type="date" v-model="dateInputs.end" @input="handleEndDateInput" class="new_calendar_date_input" id="new_calendar_right_input" />
             <button id="new_calendar_code_counter">
               &lt;/&gt;
               <span style="padding-left: 2px"> {{ bookedDaysCount }}</span>
@@ -111,7 +111,7 @@
           </div>
           <p class="new_calendar_total_code_change_text">
             <!-- 25 Total Code Changes (to date) <span>&#63;</span> -->
-            {{ bookedDates.length }} Total Code Changes (to date) <span>&#63;</span>
+            {{ bookedDates.length }} Total Code Changes (to date)
           </p>
         </div>
         <div class="new_calendar_apply_button_wrapper">
@@ -134,6 +134,10 @@ interface DateTooltip {
 export default {
   name: "CalendarModal",
   emits: ["on-filter-date-change"],
+  watch: {
+    'dateInputs.start': 'checkDateInputs',
+    'dateInputs.end': 'checkDateInputs'
+  },
   //@ts-ignore
   setup(props, { emit }) {
     const showDatePicker = ref(false);
@@ -202,14 +206,27 @@ const handleEndDateInput = () => {
   }
 };
 
+const checkDateInputs = () => {
+      const leftInput = document.getElementById('new_calendar_left_input');
+      if ((dateInputs.start === null || dateInputs.start === '') && (dateInputs.end === null || dateInputs.end === '')) {
+        if (leftInput) {
+          leftInput.style.marginRight = '7px';
+        }
+      } else {
+        if (leftInput) {
+          leftInput.style.marginRight = '0px';
+        }
+      }
+    }
+  
 
-// getting items using url
-const getItemFromUrl = (item: string) => {
-  const parsedUrl = new URL(currentUrl.value);
-  const searchParams = new URLSearchParams(parsedUrl.search);
-  const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
-  return searchParams.get(item) || hashParams.get(item);
-};
+    // getting items using url
+    const getItemFromUrl = (item: string) => {
+      const parsedUrl = new URL(currentUrl.value);
+      const searchParams = new URLSearchParams(parsedUrl.search);
+      const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
+      return searchParams.get(item) || hashParams.get(item);
+    };
 
     //  Defined loadWebVariants function 
     async function loadWebVariants() {
@@ -440,13 +457,6 @@ const updateDateRange = () => {
     };
 
     // button that selects only today
-    /* const selectToday = () => {
-      const start = new Date(today);
-      startDate.value = start;
-      endDate.value = null;
-      dateRange.value = `${formatDate(start)}`;
-    }; */
-
     const selectToday = () => {
   const start = new Date();
   startDate.value = start;
@@ -508,7 +518,7 @@ const updateDateRange = () => {
   url.hash = `?${fragmentParams.toString().replace(/%2C/g, ',')}`;
 
   // Update the browser's URL without reloading the page
-  window.history.pushState({}, '', url.toString());
+  // window.history.pushState({}, '', url.toString());
 
   const data = {
     period,
@@ -517,7 +527,7 @@ const updateDateRange = () => {
   };
 
   console.log("Emitted Data :", data);
-  emit("on-filter-date-change", {data});
+  emit("on-filter-date-change", data);
 };
 
 // highlighting selected date range
@@ -662,7 +672,8 @@ const isEndDate = (day: number, month: number) => {
       startDateInput,
       endDateInput,
       dateInputs,
-      isApplyDisabled
+      isApplyDisabled,
+      checkDateInputs
     };
   },
 };
@@ -731,7 +742,7 @@ const isEndDate = (day: number, month: number) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 50%;
+  /* width: 50%; */
   padding: 4px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -739,6 +750,14 @@ const isEndDate = (day: number, month: number) => {
   input[type="date"]::-webkit-calendar-picker-indicator {
     display: none;
   }
+}
+
+#new_calendar_left_input{
+  width: 82px;
+}
+
+#new_calendar_right_input{
+  margin-left: 7px;
 }
 
 .new_calendar_header {
