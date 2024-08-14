@@ -39,14 +39,30 @@
         stroke-linejoin="round" />
     </svg>
   </button>
-    <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
+   <!--  <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
     <option value="">Quick Select</option>
     <option value="today">Today</option>
     <option value="last7days">Last 7 days</option>
     <option value="last30days">Last 30 days</option>
     <option value="last90days">Last 90 days</option>
     <option value="custom" disabled>Custom</option>
-  </select>
+  </select> -->
+
+  <div class="custom-dropdown" @click="toggleDropdown">
+    <div class="selected-option">
+      {{ selectedOptionText }}
+    </div>
+    <div class="dropdown-options" v-if="isDropdownOpen">
+      <div 
+        v-for="option in options" 
+        :key="option.value" 
+        :class="{ 'dropdown-option': true, 'disabled': option.disabled }"
+        @click="selectOption(option)"
+      >
+        {{ option.text }}
+      </div>
+    </div>
+  </div>
   </div>
           </div>
         </div>
@@ -153,21 +169,7 @@ export default {
     const endDateInput = ref('');
     const datePicker = ref<HTMLElement | null>(null);
     const dateInput = ref<HTMLElement | null>(null);
-    const currentUrl = ref(window.location.href);
-    const dateRange = ref("");
-    const appliedDateRange = ref("");
-    const today = new Date();
-    const startMonthIndex = ref<number>(today.getMonth());
-    const endMonthIndex = ref<number>((today.getMonth() + 1) % 12);
-    const startMonth = computed(() => monthNames[startMonthIndex.value]);
-    const endMonth = computed(() => monthNames[endMonthIndex.value % 12]);
-    const startYear = ref(today.getFullYear());
-    const endYear = ref(today.getFullYear());
-    const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-    const monthNames = [ "January","February","March","April","May","June","July","August","September","October","November","December",];
-    const bookedDates = ref<Date[]>([]);
-    const changeDescriptionsRef: Ref<Record<string, string>> = ref({});
-    const tooltipVisible: Ref<DateTooltip> = ref({});
+    
     onMounted(async () => {
     const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
@@ -234,31 +236,6 @@ const checkDateInputs = () => {
       return searchParams.get(item) || hashParams.get(item);
     };
 
-    //  Defined loadWebVariants function 
-    async function loadWebVariants() {
-      const url = `/index.php?module=API&format=json&method=HeatmapSessionRecording.loadWebVariants&idSite=${getItemFromUrl('idSite')}&idSiteHsr=${getItemFromUrl('subcategory')}&deviceType=${getItemFromUrl('deviceType')}`;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log(response);
-        bookedDates.value = data.result.map((item: any) => new Date(item.raw_date));
-
-        // storing change description for future use
-        const changeDescriptions = data.result.reduce((acc: any, item: any) => {
-          acc[item.raw_date] = item.changeDescription;
-          return acc;
-        }, {});
-        changeDescriptionsRef.value = changeDescriptions;
-        
-          console.log(data);
-        } catch (error) {
-          console.error(error);
-        }
-          }
-
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside);
     });
@@ -300,32 +277,10 @@ const checkDateInputs = () => {
   return { startDate: new Date(), endDate: new Date() };
 }
 
-// getting description from versions
-const getChangeDescription = (day: number, monthIndex: number) => {
-  const date = new Date(startYear.value, monthIndex, day);
-  const dateString = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-  return changeDescriptionsRef.value[dateString] || 'No description available';
-};
-
-
   // toggling date button (visible / hidden)
     const toggleDatePickerVisibility = () => {
       showDatePicker.value = !showDatePicker.value;
     };
-
-    // used for handling input (user will be able to type in input field)
-    const handleDateInput = (event: Event) => {
-  const value = (event.target as HTMLInputElement).value;
-  const dates = value.split(" - ");
-  if (dates.length === 2) {
-    const start = new Date(dates[0]);
-    const end = new Date(dates[1]);
-    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-      startDate.value = start;
-      endDate.value = end;
-    }
-  }
-};
 
 // tooltip show on hover
     const toggleDatePicker = () => {
@@ -352,26 +307,6 @@ const getChangeDescription = (day: number, monthIndex: number) => {
     // selecting the first day of the month
     const firstDayOfMonth = (year: number, month: number) => {
       return new Date(year, month, 1).getDay();
-    };
-
-    // checking if there is a booked day
-    const isBooked = (day: number, month: number) => {
-      return bookedDates.value.some(
-        (bookedDate: Date) =>
-          bookedDate.getDate() === day &&
-          bookedDate.getMonth() === month &&
-          bookedDate.getFullYear() === startYear.value
-      );
-    };
-
-    // showing of tooltip
-    const showTooltip = (index: number) => {
-      tooltipVisible.value = { ...tooltipVisible.value, [index]: true };
-    };
-
-    // hiding of tooltip
-    const hideTooltip = (index: number) => {
-      tooltipVisible.value = { ...tooltipVisible.value, [index]: false };
     };
 
     // selecting date on the calendar
@@ -411,46 +346,6 @@ const updateDateRange = () => {
   }
 };
 
-    // button that clears all date range text from input field
-    const clearDates = () => {
-  startDate.value = null;
-  endDate.value = null;
-  dateInputs.start = '';
-  dateInputs.end = '';
-  dateRange.value = "";
-};
-
-    // arrow button for showing previous months
-    const prevMonth = () => {
-      if (startMonthIndex.value > 0) {
-        startMonthIndex.value -= 1;
-      } else {
-        startMonthIndex.value = 11;
-        startYear.value -= 1;
-      }
-      if (endMonthIndex.value > 0) {
-        endMonthIndex.value -= 1;
-      } else {
-        endMonthIndex.value = 11;
-        endYear.value -= 1;
-      }
-    };
-
-    // arrow button for showing following months
-    const nextMonth = () => {
-      if (startMonthIndex.value < 11) {
-        startMonthIndex.value += 1;
-      } else {
-        startMonthIndex.value = 0;
-        startYear.value += 1;
-      }
-      if (endMonthIndex.value < 11) {
-        endMonthIndex.value += 1;
-      } else {
-        endMonthIndex.value = 0;
-        endYear.value += 1;
-      }
-    };
 
     // button that selects only today
     const selectToday = () => {
@@ -571,39 +466,6 @@ const isEndDate = (day: number, month: number) => {
       return `${month}/${day}/${year}`;
     };
 
-    const appliedHasBookedDaysInRange = computed(() => {
-      if (!appliedDateRange.value) {
-        return false;
-      }
-      const [start, end] = appliedDateRange.value
-        .split(" - ")
-        .map((date: string) => new Date(date));
-      return bookedDates.value.some(
-        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
-      );
-    });
-
-    const appliedBookedDaysCount = computed(() => {
-      if (!appliedDateRange.value) {
-        return 0;
-      }
-      const [start, end] = appliedDateRange.value
-        .split(" - ")
-        .map((date: string) => new Date(date));
-      return bookedDates.value.filter(
-        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
-      ).length;
-    });
-
-    const formatRange = (start: Date | null, end: Date | null) => {
-      const startString = start
-        ? `${start.getMonth() + 1}/${start.getDate()}/${start.getFullYear()}`
-        : "--/--/----";
-      const endString = end
-        ? `${end.getMonth() + 1}/${end.getDate()}/${end.getFullYear()}`
-        : "--/--/----";
-      return `${startString} - ${endString}`;
-    };
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -697,381 +559,8 @@ const checkIfCustomDateRange = () => {
       dayNames,
       startMonth,
       endMonth,
-      daysInMonth,
-      isBooked,
-      selectDate,
-      clearDates,
-      prevMonth,
-      nextMonth,
-      selectToday,
-      applyDateRange,
-      isSelected,
-      isHighlighted,
-      isStartDate,
-      isEndDate,
-      tooltipVisible,
-      showTooltip,
-      hideTooltip,
-      appliedHasBookedDaysInRange,
-      appliedBookedDaysCount,
-      handleDateInput,
-      toggleDatePicker,
-      bookedDaysCount,
-      formatDate,
-      formatRange,
-      updateDateRange,
-      handleClickOutside,
-      datePicker,
-      dateInput,
-      bookedDates,
-      getDefaultDatesFromUrl,
-      loadWebVariants,
-      getChangeDescription,
-      getItemFromUrl,
-      handleStartDateInput,
-      handleEndDateInput,
-      startDateInput,
-      endDateInput,
-      dateInputs,
-      isApplyDisabled,
-      checkDateInputs,
-      handleQuickSelect,
-      selectedQuickOption
+      
     };
   },
 };
 </script>
-
-<style scoped>
-.new_calendar_wrapper {
-  position: relative;
-}
-
-.new_calendar_date_range_picker {
-  position: absolute;
-  top: 9px;
-  flex-direction: column;
-  align-items: center;
-  width: 480px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #fff;
-}
-
-.new_calendar_toggle_button {
-  display: flex;
-  align-items: center;
-  border-radius: 10px;
-  border: 1px solid var(--Grey-200, #e6e7e8);
-  /* padding: 10px; */
-  padding: 12.5px 10px;
-  background: var(--Grey-White, #fff);
-  box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
-  color: var(--Grey-800, #34404b);
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 24px;
-  letter-spacing: -0.05px;
-  cursor: pointer;
-}
-
-.calendar_toggle_btn {
-  display: unset !important;
-  border-radius: 4px;
-  background: #449ff4;
-  padding: 2px 7px;
-  font-size: 12px;
-  color: #fff;
-  font-weight: 700;
-  margin-left: 10px;
-}
-
-.new_calendar_date_picker_arrows {
-  display: flex;
-  align-items: center;
-}
-
-.new_calendar_arrow {
-  margin-bottom: 0px;
-  margin-left: 4px;
-  border-radius: 4px;
-  border: 1px solid var(--Grey-200, #e6e7e8);
-  background: var(--Grey-White, #fff);
-  box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
-}
-
-.new_calendar_input_wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  /* width: 50%; */
-  padding: 4px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    display: none;
-  }
-}
-
-#new_calendar_left_input{
-  width: 82px;
-}
-
-#new_calendar_right_input{
-  margin-left: 7px;
-}
-
-.new_calendar_header {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  justify-content: space-between;
-}
-
-.new_calendar_date_input {
-  padding: 6px;
-  border: none !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  border-bottom: none !important;
-  height: auto !important;
-  margin-bottom: 0px !important;
-}
-
-
-
-.new_calendar_date_input:focus {
-  outline: none;
-}
-
-.new_calendar_header button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 5px;
-  font-size: 1.5em;
-}
-
-.new_calendar_datepicker_container {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.new_calendar_wrapper {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.new_calendar {
-  width: 100%;
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-#new_calendar_code_counter {
-  border-radius: 4px;
-  background: #449ff4;
-  padding: 5px 7px;
-  font-size: 12px;
-  color: #fff;
-  font-weight: 700;
-  display: none;
-}
-
-#new_calendar_arrows_wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 60%;
-}
-
-#new_calendar_select_today {
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 4px;
-  border: 1px solid var(--Grey-200, #e6e7e8);
-  background: var(--Grey-White, #fff);
-  box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
-  padding: 8px;
-}
-
-.new_calendar_month {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.new_calendar_days_of_week {
-  margin-bottom: 10px;
-}
-
-.new_calendar_days,
-.new_calendar_days_of_week {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-}
-
-.new_calendar_day {
-  text-align: center;
-  padding: 5px;
-  cursor: pointer;
-  position: relative;
-}
-
-.new_calendar_day:hover {
-  background: #03c191;
-  transition: 0.1s ease-in-out;
-  border-radius: 4px;
-}
-
-.new_calendar_day.selected {
-  background: #03c191;
-}
-
-.new_calendar_day.highlighted {
-  background-color: #d7ffed;
-}
-
-.new_calendar_day.start-date {
-  border-radius: 12px 0px 0px 12px;
-  background: #03c191;
-}
-
-.new_calendar_day.end-date {
-  border-radius: 0px 12px 12px 0px;
-  background: #03c191;
-}
-
-.new_calendar_day.booked {
- /*  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  flex-shrink: 0;
-  background: #449ff4;
-  color: #fff;
-  position: relative; */
-
-      display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    flex-shrink: 0;
-    /* background: #449ff4; */
-    color: inherit;
-    position: relative;
-}
-
-.new_calendar_day.booked:hover {
-  border-radius: 0px;
-}
-
-.new_calendar_tooltip {
-  width: 200px;
-  position: absolute;
-  top: 100%;
-  /* left: 350%; */
-  left: 330%;
-  transform: translateX(-50%);
-  background: #fff;
-  color: #000;
-  padding: 10px 10px 0px 10px;
-  /* padding-bottom: 0px; */
-  z-index: 999;
-  display: none;
-  text-align: start;
-
-  border-radius: 10px;
-  border: 1px solid var(--Grey-200, #e6e7e8);
-  background: var(--Grey-White, #fff);
-  box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
-}
-
-.new_calendar_day.booked:hover .new_calendar_tooltip {
-  display: block;
-}
-
-.new_calendar_tooltip_header {
-  color: var(--Grey-800, #34404b);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  padding: 0px;
-  margin: 0px;
-}
-
-.new_calendar_tooltip_list {
-  list-style-type: none;
-  margin: 10px 0px 10px 0px;
-  color: var(--Grey-800, #34404b);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 12px;
-
-  /* new style */
-  white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 180%;
-        padding-bottom: 0px;
-}
-
-.new_calendar_total_code_change_text {
-  width: 100%;
-  text-align: end;
-  color: #225caf;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 12px;
-  margin-top: 20px;
-}
-
-.new_calendar_apply_button_wrapper {
-  display: flex;
-  justify-content: end;
-  border-top: 2px solid #e6e7e8;
-  padding-top: 10px;
-}
-
-.new_calendar_apply_button {
-  border: none;
-  border-radius: var(--Padding-Corner, 6px);
-  font-size: 15px;
-  color: #fff;
-  font-style: normal;
-  font-weight: 600;
-  background: var(--Primary-03-Main, #00936f);
-  display: flex;
-  padding: var(--Padding-Horizontal-padding, 10px) var(--Padding-Vertical-padding, 16px);
-  align-items: flex-start;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.new_calendar_apply_button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* quick days selection style */
-#new_calendar_quick_select {
-  margin-left: 10px;
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
-  font-size: 14px;
-}
-
-</style>
