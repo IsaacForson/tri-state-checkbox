@@ -39,14 +39,26 @@
         stroke-linejoin="round" />
     </svg>
   </button>
-    <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
-    <option value="">Quick Select</option>
+   <!--  <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
+    <option value="" selected>Quick Select</option>
     <option value="today">Today</option>
     <option value="last7days">Last 7 days</option>
     <option value="last30days">Last 30 days</option>
     <option value="last90days">Last 90 days</option>
     <option value="custom" disabled>Custom</option>
-  </select>
+  </select> -->
+  <div class="custom-dropdown" ref="dropdownRef">
+    <button @click="toggleDropdown" class="dropdown-toggle">
+      {{ selectedQuickOption || 'Quick Select' }}
+    </button>
+    <ul v-if="isDropdownOpen" class="dropdown-menu">
+      <li @click="selectOption('Roday', $event)">Today</li>
+      <li @click="selectOption('last7days', $event)">Last 7 Days</li>
+      <li @click="selectOption('last30days', $event)">Last 30 Days</li>
+      <li @click="selectOption('last90days', $event)">Last 90 Days</li>
+      <li class="disabled">Custom</li>
+    </ul>
+  </div>
   </div>
           </div>
         </div>
@@ -129,7 +141,7 @@
 <script lang="ts">
 //@ts-ignore
 // import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits, reactive } from "vue";
-import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits, reactive, watch } from "vue";
+import { ref, computed, onBeforeUnmount, onMounted, onUnmounted, Ref, defineEmits, reactive, watch } from "vue";
 
 
 interface DateTooltip {
@@ -684,6 +696,37 @@ const checkIfCustomDateRange = () => {
   }
 };
 
+const isDropdownOpen = ref(false);
+    const dropdownRef = ref(null);
+
+    const toggleDropdown = (event: Event) => {
+  event.stopPropagation();
+  isDropdownOpen.value = !isDropdownOpen.value;
+};
+
+    const selectOption = (option: string, event?: Event) => {
+      if (event) {
+    event.stopPropagation();
+  }
+      selectedQuickOption.value = option;
+      handleQuickSelect({ target: { value: option } });
+      isDropdownOpen.value = false;
+    };
+
+    const closeDropdownOnClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+        isDropdownOpen.value = false;
+      }
+    };
+
+    onMounted(() => {
+      document.addEventListener('click', closeDropdownOnClickOutside);
+    });
+
+    onUnmounted(() => {
+      document.removeEventListener('click', closeDropdownOnClickOutside);
+    });
+
     return {
       showDatePicker,
       toggleDatePickerVisibility,
@@ -736,7 +779,11 @@ const checkIfCustomDateRange = () => {
       isApplyDisabled,
       checkDateInputs,
       handleQuickSelect,
-      selectedQuickOption
+      selectedQuickOption,
+      isDropdownOpen,
+      toggleDropdown,
+      selectOption,
+      dropdownRef,
     };
   },
 };
@@ -851,7 +898,7 @@ const checkIfCustomDateRange = () => {
   background: none;
   border: none;
   cursor: pointer;
-  margin-left: 5px;
+  /* margin-left: 5px; */
   font-size: 1.5em;
 }
 
@@ -1064,7 +1111,7 @@ const checkIfCustomDateRange = () => {
   cursor: not-allowed;
 }
 
-/* quick days selection style */
+/*@@@@@@@@@@@@@@@@ quick days selection style @@@@@@@@@@@@@@@@*/
 #new_calendar_quick_select {
   margin-left: 10px;
   padding: 5px;
@@ -1072,6 +1119,58 @@ const checkIfCustomDateRange = () => {
   border-radius: 4px;
   background-color: white;
   font-size: 14px;
+}
+
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+  border: 1px solid #E6E7E8;
+background: #FFF;
+box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);;
+  font-size: 10px;
+}
+
+.dropdown-toggle {
+  padding: 5px 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: block;
+  min-width: 200px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  font-size: 14px;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.15);
+  border-radius: 4px;
+  box-shadow: 0 6px 12px rgba(0,0,0,.175);
+}
+
+.dropdown-menu li {
+  padding: 3px 20px;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.dropdown-menu li:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-menu li.disabled {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 </style>

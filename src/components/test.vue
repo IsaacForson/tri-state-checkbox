@@ -1,22 +1,13 @@
 <template>
   <div>
     <button @click="toggleDatePickerVisibility" class="new_calendar_toggle_button" ref="dateInput">
-      <svg style="margin-right: 10px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-        fill="none">
-        <path
-          d="M7.25 17.5534V17.4688M12.3125 17.5534V17.4688M12.3125 12.9688V12.8842M16.8125 12.9688V12.8842M3.875 8.46875H19.625M5.91071 2V3.68771M17.375 2V3.6875M17.375 3.6875H6.125C4.26104 3.6875 2.75 5.19854 2.75 7.0625V18.3126C2.75 20.1766 4.26104 21.6876 6.125 21.6876H17.375C19.239 21.6876 20.75 20.1766 20.75 18.3126L20.75 7.0625C20.75 5.19854 19.239 3.6875 17.375 3.6875Z"
-          stroke="#4D5861" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
       {{ appliedDateRange }}
-      <!-- <span class="calendar_toggle_btn" v-if="appliedHasBookedDaysInRange">
-        &lt;/&gt; {{ appliedBookedDaysCount }}</span> -->
     </button>
 
     <div class="new_calendar_wrapper">
       <div class="new_calendar_date_range_picker" v-show="showDatePicker" ref="datePicker">
         <div class="new_calendar_header">
           <div class="new_calendar_input_wrapper">
-            <!-- input fields to type date manually -->
             <input type="date" v-model="dateInputs.start" @input="handleStartDateInput" class="new_calendar_date_input" id="new_calendar_left_input" /> <span> - </span>
             <input type="date" v-model="dateInputs.end" @input="handleEndDateInput" class="new_calendar_date_input" id="new_calendar_right_input" />
             <button id="new_calendar_code_counter">
@@ -27,42 +18,14 @@
           <div id="new_calendar_arrows_wrapper">
             <button @click="clearDates">×</button>
             <div style="display: flex; align-items: center; margin-left: auto">
-  <button class="new_calendar_date_picker_arrows">
-    <svg @click="prevMonth" class="new_calendar_arrow" xmlns="http://www.w3.org/2000/svg" width="20"
-      height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M12.5 15L7.5 10L12.5 5" stroke="#34404B" stroke-width="1.5" stroke-linecap="square"
-        stroke-linejoin="round" />
-    </svg>
-    <svg @click="nextMonth" class="new_calendar_arrow" xmlns="http://www.w3.org/2000/svg" width="20"
-      height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M7.5 15L12.5 10L7.5 5" stroke="#34404B" stroke-width="1.5" stroke-linecap="square"
-        stroke-linejoin="round" />
-    </svg>
-  </button>
-   <!--  <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
-    <option value="">Quick Select</option>
+    <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
+    <option value="" selected>Quick Select</option>
     <option value="today">Today</option>
     <option value="last7days">Last 7 days</option>
     <option value="last30days">Last 30 days</option>
     <option value="last90days">Last 90 days</option>
     <option value="custom" disabled>Custom</option>
-  </select> -->
-
-  <div class="custom-dropdown" @click="toggleDropdown">
-    <div class="selected-option">
-      {{ selectedOptionText }}
-    </div>
-    <div class="dropdown-options" v-if="isDropdownOpen">
-      <div 
-        v-for="option in options" 
-        :key="option.value" 
-        :class="{ 'dropdown-option': true, 'disabled': option.disabled }"
-        @click="selectOption(option)"
-      >
-        {{ option.text }}
-      </div>
-    </div>
-  </div>
+  </select>
   </div>
           </div>
         </div>
@@ -100,38 +63,7 @@
                 </div>
               </div>
             </div>
-            <div class="new_calendar" ref="endCalendar">
-              <div class="new_calendar_month">
-                <span>{{ endMonth }} {{ endYear }}</span>
-              </div>
-              <div class="new_calendar_days_of_week">
-                <div v-for="(dayName, index) in dayNames" :key="index" class="new_calendar_day_of_week">
-                  {{ dayName }}
-                </div>
-              </div>
-              <div class="new_calendar_days">
-                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(endYear, endMonthIndex)" :key="index"
-                  :class="{
-                    selected: isSelected(Number(day), endMonthIndex),
-                    highlighted: isHighlighted(Number(day), endMonthIndex),
-                    'start-date': isStartDate(Number(day), endMonthIndex),
-                    'end-date': isEndDate(Number(day), endMonthIndex),
-                    booked: isBooked(Number(day), endMonthIndex),
-                  }" @click="selectDate(Number(day), endMonthIndex)">
-                  {{ day }}
-                  <div v-if="isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"  v-show="tooltipVisible[index]">
-                  <h6 class="new_calendar_tooltip_header">
-                    Major Code Changes
-                  </h6>
-                  <p class="new_calendar_tooltip_list">{{ getChangeDescription(Number(day), endMonthIndex) }}</p>
-                </div>
-                </div>
-              </div>
-            </div>
           </div>
-         <!--  <p class="new_calendar_total_code_change_text">
-            {{ bookedDates.length }} Total Code Changes (to date)
-          </p> -->
         </div>
         <div class="new_calendar_apply_button_wrapper">
           <button @click="applyDateRange" class="new_calendar_apply_button"   :disabled="isApplyDisabled">
@@ -144,7 +76,6 @@
 </template>
 <script lang="ts">
 //@ts-ignore
-// import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits, reactive } from "vue";
 import { ref, computed, onBeforeUnmount, onMounted, Ref, defineEmits, reactive, watch } from "vue";
 
 
@@ -169,7 +100,21 @@ export default {
     const endDateInput = ref('');
     const datePicker = ref<HTMLElement | null>(null);
     const dateInput = ref<HTMLElement | null>(null);
-    
+    const currentUrl = ref(window.location.href);
+    const dateRange = ref("");
+    const appliedDateRange = ref("");
+    const today = new Date();
+    const startMonthIndex = ref<number>(today.getMonth());
+    const endMonthIndex = ref<number>((today.getMonth() + 1) % 12);
+    const startMonth = computed(() => monthNames[startMonthIndex.value]);
+    const endMonth = computed(() => monthNames[endMonthIndex.value % 12]);
+    const startYear = ref(today.getFullYear());
+    const endYear = ref(today.getFullYear());
+    const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    const monthNames = [ "January","February","March","April","May","June","July","August","September","October","November","December",];
+    const bookedDates = ref<Date[]>([]);
+    const changeDescriptionsRef: Ref<Record<string, string>> = ref({});
+    const tooltipVisible: Ref<DateTooltip> = ref({});
     onMounted(async () => {
     const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
@@ -236,6 +181,31 @@ const checkDateInputs = () => {
       return searchParams.get(item) || hashParams.get(item);
     };
 
+    //  Defined loadWebVariants function 
+    async function loadWebVariants() {
+      const url = `/index.php?module=API&format=json&method=HeatmapSessionRecording.loadWebVariants&idSite=${getItemFromUrl('idSite')}&idSiteHsr=${getItemFromUrl('subcategory')}&deviceType=${getItemFromUrl('deviceType')}`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log(response);
+        bookedDates.value = data.result.map((item: any) => new Date(item.raw_date));
+
+        // storing change description for future use
+        const changeDescriptions = data.result.reduce((acc: any, item: any) => {
+          acc[item.raw_date] = item.changeDescription;
+          return acc;
+        }, {});
+        changeDescriptionsRef.value = changeDescriptions;
+        
+          console.log(data);
+        } catch (error) {
+          console.error(error);
+        }
+          }
+
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside);
     });
@@ -277,10 +247,32 @@ const checkDateInputs = () => {
   return { startDate: new Date(), endDate: new Date() };
 }
 
+// getting description from versions
+const getChangeDescription = (day: number, monthIndex: number) => {
+  const date = new Date(startYear.value, monthIndex, day);
+  const dateString = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  return changeDescriptionsRef.value[dateString] || 'No description available';
+};
+
+
   // toggling date button (visible / hidden)
     const toggleDatePickerVisibility = () => {
       showDatePicker.value = !showDatePicker.value;
     };
+
+    // used for handling input (user will be able to type in input field)
+    const handleDateInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value;
+  const dates = value.split(" - ");
+  if (dates.length === 2) {
+    const start = new Date(dates[0]);
+    const end = new Date(dates[1]);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      startDate.value = start;
+      endDate.value = end;
+    }
+  }
+};
 
 // tooltip show on hover
     const toggleDatePicker = () => {
@@ -307,6 +299,26 @@ const checkDateInputs = () => {
     // selecting the first day of the month
     const firstDayOfMonth = (year: number, month: number) => {
       return new Date(year, month, 1).getDay();
+    };
+
+    // checking if there is a booked day
+    const isBooked = (day: number, month: number) => {
+      return bookedDates.value.some(
+        (bookedDate: Date) =>
+          bookedDate.getDate() === day &&
+          bookedDate.getMonth() === month &&
+          bookedDate.getFullYear() === startYear.value
+      );
+    };
+
+    // showing of tooltip
+    const showTooltip = (index: number) => {
+      tooltipVisible.value = { ...tooltipVisible.value, [index]: true };
+    };
+
+    // hiding of tooltip
+    const hideTooltip = (index: number) => {
+      tooltipVisible.value = { ...tooltipVisible.value, [index]: false };
     };
 
     // selecting date on the calendar
@@ -346,6 +358,46 @@ const updateDateRange = () => {
   }
 };
 
+    // button that clears all date range text from input field
+    const clearDates = () => {
+  startDate.value = null;
+  endDate.value = null;
+  dateInputs.start = '';
+  dateInputs.end = '';
+  dateRange.value = "";
+};
+
+    // arrow button for showing previous months
+    const prevMonth = () => {
+      if (startMonthIndex.value > 0) {
+        startMonthIndex.value -= 1;
+      } else {
+        startMonthIndex.value = 11;
+        startYear.value -= 1;
+      }
+      if (endMonthIndex.value > 0) {
+        endMonthIndex.value -= 1;
+      } else {
+        endMonthIndex.value = 11;
+        endYear.value -= 1;
+      }
+    };
+
+    // arrow button for showing following months
+    const nextMonth = () => {
+      if (startMonthIndex.value < 11) {
+        startMonthIndex.value += 1;
+      } else {
+        startMonthIndex.value = 0;
+        startYear.value += 1;
+      }
+      if (endMonthIndex.value < 11) {
+        endMonthIndex.value += 1;
+      } else {
+        endMonthIndex.value = 0;
+        endYear.value += 1;
+      }
+    };
 
     // button that selects only today
     const selectToday = () => {
@@ -466,6 +518,39 @@ const isEndDate = (day: number, month: number) => {
       return `${month}/${day}/${year}`;
     };
 
+    const appliedHasBookedDaysInRange = computed(() => {
+      if (!appliedDateRange.value) {
+        return false;
+      }
+      const [start, end] = appliedDateRange.value
+        .split(" - ")
+        .map((date: string) => new Date(date));
+      return bookedDates.value.some(
+        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
+      );
+    });
+
+    const appliedBookedDaysCount = computed(() => {
+      if (!appliedDateRange.value) {
+        return 0;
+      }
+      const [start, end] = appliedDateRange.value
+        .split(" - ")
+        .map((date: string) => new Date(date));
+      return bookedDates.value.filter(
+        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
+      ).length;
+    });
+
+    const formatRange = (start: Date | null, end: Date | null) => {
+      const startString = start
+        ? `${start.getMonth() + 1}/${start.getDate()}/${start.getFullYear()}`
+        : "--/--/----";
+      const endString = end
+        ? `${end.getMonth() + 1}/${end.getDate()}/${end.getFullYear()}`
+        : "--/--/----";
+      return `${startString} - ${endString}`;
+    };
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -559,7 +644,46 @@ const checkIfCustomDateRange = () => {
       dayNames,
       startMonth,
       endMonth,
-      
+      daysInMonth,
+      isBooked,
+      selectDate,
+      clearDates,
+      prevMonth,
+      nextMonth,
+      selectToday,
+      applyDateRange,
+      isSelected,
+      isHighlighted,
+      isStartDate,
+      isEndDate,
+      tooltipVisible,
+      showTooltip,
+      hideTooltip,
+      appliedHasBookedDaysInRange,
+      appliedBookedDaysCount,
+      handleDateInput,
+      toggleDatePicker,
+      bookedDaysCount,
+      formatDate,
+      formatRange,
+      updateDateRange,
+      handleClickOutside,
+      datePicker,
+      dateInput,
+      bookedDates,
+      getDefaultDatesFromUrl,
+      loadWebVariants,
+      getChangeDescription,
+      getItemFromUrl,
+      handleStartDateInput,
+      handleEndDateInput,
+      startDateInput,
+      endDateInput,
+      dateInputs,
+      isApplyDisabled,
+      checkDateInputs,
+      handleQuickSelect,
+      selectedQuickOption
     };
   },
 };
