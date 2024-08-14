@@ -60,7 +60,6 @@
       <li @click="selectOption('last7days', $event)">Last 7 days</li>
       <li @click="selectOption('last30days', $event)">Last 30 days</li>
       <li @click="selectOption('last90days', $event)">Last 90 days</li>
-      <!-- <li class="disabled">Custom</li> -->
     </ul>
   </div>
   </div>
@@ -212,9 +211,9 @@ export default {
 const displayQuickOption = computed(() => {
       const options = {
         'today': 'Today',
-        'last7days': 'Last 7 days',
-        'last30days': 'Last 30 days',
-        'last90days': 'Last 90 days',
+        'last7days': '7 days',
+        'last30days': '30 days',
+        'last90days': '90 days',
         'custom': 'Custom'
       };
       return options[selectedQuickOption.value] || 'Quick Select';
@@ -1144,7 +1143,7 @@ const isDropdownOpen = ref(false);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-width: 120px;
+  min-width: 100px;
   border-right: 3px solid green;
   font-size: 10px;
 }
