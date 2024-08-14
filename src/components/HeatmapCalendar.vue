@@ -151,7 +151,9 @@ export default {
   },
   //@ts-ignore
   setup(props, { emit }) {
-    const selectedQuickOption = ref('');
+    type QuickOptionKey = 'today' | 'last7days' | 'last30days' | 'last90days' | 'custom';
+    // const selectedQuickOption = ref('');
+    const selectedQuickOption = ref<QuickOptionKey | ''>('');
     const showDatePicker = ref(false);
     const startDate: Ref<Date | null> = ref(null);
     const endDate: Ref<Date | null> = ref(null);
@@ -200,15 +202,15 @@ export default {
 });
 
 const displayQuickOption = computed(() => {
-      const options = {
-        'today': 'Today',
-        'last7days': '7 days',
-        'last30days': '30 days',
-        'last90days': '90 days',
-        'custom': 'Custom'
-      };
-      return options[selectedQuickOption.value] || 'Quick Select';
-    });
+  const options: Record<QuickOptionKey, string> = {
+    'today': 'Today',
+    'last7days': '7 days',
+    'last30days': '30 days',
+    'last90days': '90 days',
+    'custom': 'Custom'
+  };
+  return selectedQuickOption.value ? options[selectedQuickOption.value] : 'Quick Select';
+});
 
 const dateInputs = reactive({
   start: '',
@@ -635,7 +637,7 @@ const isEndDate = (day: number, month: number) => {
   return !startDate.value && !endDate.value;
 });
 
-const handleQuickSelect = (event) => {
+const handleQuickSelect = (event:any) => {
   const selectedValue = event.target.value;
   const today = new Date();
   let start, end;
@@ -685,7 +687,8 @@ watch(endDate, () => {
 const checkIfCustomDateRange = () => {
   if (startDate.value && endDate.value) {
     const today = new Date();
-    const diffDays = Math.round((endDate.value - startDate.value) / (1000 * 60 * 60 * 24));
+    // const diffDays = Math.round((endDate.value - startDate.value) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(((endDate.value as Date).getTime() - (startDate.value as Date).getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0 && startDate.value.toDateString() === today.toDateString()) {
       selectedQuickOption.value = 'today';
@@ -702,14 +705,17 @@ const checkIfCustomDateRange = () => {
 };
 
 const isDropdownOpen = ref(false);
-    const dropdownRef = ref(null);
+    // const dropdownRef = ref(null);
+    const dropdownRef: Ref<HTMLElement | null> = ref(null);
+
+
 
     const toggleDropdown = (event: Event) => {
   event.stopPropagation();
   isDropdownOpen.value = !isDropdownOpen.value;
 };
 
-    const selectOption = (option: string, event?: Event) => {
+    const selectOption = (option: QuickOptionKey, event?: Event) => {
       if (event) {
     event.stopPropagation();
   }
@@ -719,10 +725,12 @@ const isDropdownOpen = ref(false);
     };
 
     const closeDropdownOnClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-        isDropdownOpen.value = false;
-      }
-    };
+  if (dropdownRef.value && event.target instanceof Node) {
+    if (!dropdownRef.value.contains(event.target)) {
+      isDropdownOpen.value = false;
+    }
+  }
+};
 
     onMounted(() => {
       document.addEventListener('click', closeDropdownOnClickOutside);
@@ -1142,7 +1150,7 @@ const isDropdownOpen = ref(false);
 .new_calendar_dropdown-menu {
   position: absolute;
   top: 100%;
-  left: 80px;
+  left: 60px;
   z-index: 1000;
   display: block;
   min-width: 200px;
@@ -1163,6 +1171,7 @@ const isDropdownOpen = ref(false);
   padding: 5px 10px;
   margin-bottom: 5px;
   cursor: pointer;
+  font-size: 12px;
 }
 
 .new_calendar_dropdown-menu li:hover {
