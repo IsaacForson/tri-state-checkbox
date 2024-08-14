@@ -47,16 +47,20 @@
     <option value="last90days">Last 90 days</option>
     <option value="custom" disabled>Custom</option>
   </select> -->
-  <div class="custom-dropdown" ref="dropdownRef">
-    <button @click="toggleDropdown" class="dropdown-toggle">
-      {{ selectedQuickOption || 'Quick Select' }}
+  <div class="new_calendar_custom-dropdown" ref="dropdownRef">
+    <button @click.stop="toggleDropdown" class="new_calendar_dropdown-toggle">
+      <span style="font-size: 12px; font-weight: 500;">{{ displayQuickOption }}</span>
+
+      <svg class="new_calendar_dropdown-icon" xmlns="http://www.w3.org/2000/svg" :class="{ 'open': isDropdownOpen }" width="20" height="20" viewBox="0 0 20 20" fill="none">
+<path d="M5 7.5L10 12.5L15 7.5" stroke="#34404B" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="round"/>
+</svg>
     </button>
-    <ul v-if="isDropdownOpen" class="dropdown-menu">
-      <li @click="selectOption('Roday', $event)">Today</li>
-      <li @click="selectOption('last7days', $event)">Last 7 Days</li>
-      <li @click="selectOption('last30days', $event)">Last 30 Days</li>
-      <li @click="selectOption('last90days', $event)">Last 90 Days</li>
-      <li class="disabled">Custom</li>
+    <ul v-if="isDropdownOpen" class="new_calendar_dropdown-menu">
+      <li @click="selectOption('today', $event)">Today</li>
+      <li @click="selectOption('last7days', $event)">Last 7 days</li>
+      <li @click="selectOption('last30days', $event)">Last 30 days</li>
+      <li @click="selectOption('last90days', $event)">Last 90 days</li>
+      <!-- <li class="disabled">Custom</li> -->
     </ul>
   </div>
   </div>
@@ -204,6 +208,17 @@ export default {
 
   await loadWebVariants(); // Fetch booked dates from the API
 });
+
+const displayQuickOption = computed(() => {
+      const options = {
+        'today': 'Today',
+        'last7days': 'Last 7 days',
+        'last30days': 'Last 30 days',
+        'last90days': 'Last 90 days',
+        'custom': 'Custom'
+      };
+      return options[selectedQuickOption.value] || 'Quick Select';
+    });
 
 const dateInputs = reactive({
   start: '',
@@ -784,6 +799,7 @@ const isDropdownOpen = ref(false);
       toggleDropdown,
       selectOption,
       dropdownRef,
+      displayQuickOption
     };
   },
 };
@@ -998,23 +1014,12 @@ const isDropdownOpen = ref(false);
 }
 
 .new_calendar_day.booked {
- /*  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  flex-shrink: 0;
-  background: #449ff4;
-  color: #fff;
-  position: relative; */
-
-      display: flex;
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 20px;
     flex-shrink: 0;
-    /* background: #449ff4; */
     color: inherit;
     position: relative;
 }
@@ -1115,33 +1120,39 @@ const isDropdownOpen = ref(false);
 #new_calendar_quick_select {
   margin-left: 10px;
   padding: 5px;
-  border: 1px solid #ccc;
+  border: 1px solid #f5e9e9;
   border-radius: 4px;
   background-color: white;
   font-size: 14px;
 }
 
-.custom-dropdown {
+.new_calendar_custom-dropdown {
   position: relative;
   display: inline-block;
   border: 1px solid #E6E7E8;
-background: #FFF;
-box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);;
+  background: #FFF;
+  box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);;
   font-size: 10px;
+  border-radius: 4px;
 }
 
-.dropdown-toggle {
+.new_calendar_dropdown-toggle {
   padding: 5px 10px;
   background-color: #f8f9fa;
   border: 1px solid #ced4da;
-  border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 120px;
+  border-right: 3px solid green;
+  font-size: 10px;
 }
 
-.dropdown-menu {
+.new_calendar_dropdown-menu {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 80px;
   z-index: 1000;
   display: block;
   min-width: 200px;
@@ -1153,24 +1164,32 @@ box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);;
   background-color: #fff;
   background-clip: padding-box;
   border: 1px solid rgba(0,0,0,.15);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: 0 6px 12px rgba(0,0,0,.175);
+  padding: 5px 0px;
 }
 
-.dropdown-menu li {
-  padding: 3px 20px;
+.new_calendar_dropdown-menu li {
+  padding: 5px 10px;
   margin-bottom: 5px;
   cursor: pointer;
 }
 
-.dropdown-menu li:hover {
+.new_calendar_dropdown-menu li:hover {
   background-color: #f5f5f5;
 }
 
-.dropdown-menu li.disabled {
+.new_calendar_dropdown-menu li.disabled {
   color: #6c757d;
   pointer-events: none;
   cursor: not-allowed;
+}
+
+.new_calendar_dropdown-icon{
+border-left: 1px solid #E6E7E8;
+/* border-right: 1px solid #E6E7E8; */
+margin-left: 15px;
+padding: 1px 0px 1px 5px;
 }
 
 </style>
