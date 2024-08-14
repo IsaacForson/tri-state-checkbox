@@ -39,14 +39,6 @@
         stroke-linejoin="round" />
     </svg>
   </button>
-   <!--  <select @change="handleQuickSelect" v-model="selectedQuickOption" id="new_calendar_quick_select">
-    <option value="" selected>Quick Select</option>
-    <option value="today">Today</option>
-    <option value="last7days">Last 7 days</option>
-    <option value="last30days">Last 30 days</option>
-    <option value="last90days">Last 90 days</option>
-    <option value="custom" disabled>Custom</option>
-  </select> -->
   <div class="new_calendar_custom-dropdown" ref="dropdownRef">
     <button @click.stop="toggleDropdown" class="new_calendar_dropdown-toggle">
       <span style="font-size: 12px; font-weight: 500;">{{ displayQuickOption }}</span>
