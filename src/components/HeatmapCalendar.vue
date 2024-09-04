@@ -193,8 +193,9 @@ export default {
   dateRange.value = `${formatDate(start)} - ${formatDate(end)}`;
   appliedDateRange.value = dateRange.value;
 
-  console.log('Default Start Date:', formatDate(start));
-  console.log('Default End Date:', formatDate(end));
+  // Set the input field values
+  dateInputs.start = start.toISOString().split('T')[0];
+  dateInputs.end = end.toISOString().split('T')[0];
 
   document.addEventListener('click', handleClickOutside);
 
@@ -342,7 +343,7 @@ const getDefaultDatesFromUrl = () => {
   else if (periodParam === 'week') {
     var today = new Date();
     var date30DaysAgo = new Date();
-    date30DaysAgo.setDate(today.getDate() - 30);  // Changed from 7 to 30
+    date30DaysAgo.setDate(today.getDate() - 29);  // Changed from 7 to 30
     return { startDate: date30DaysAgo, endDate: today };
   } 
   else if (periodParam === 'range') {
@@ -354,7 +355,7 @@ const getDefaultDatesFromUrl = () => {
   else if (periodParam === 'month') {
     var today = new Date();
     var date30DaysAgo = new Date();
-    date30DaysAgo.setDate(today.getDate() - 30);
+    date30DaysAgo.setDate(today.getDate() - 29);
     return { startDate: date30DaysAgo, endDate: today };
   }
   
