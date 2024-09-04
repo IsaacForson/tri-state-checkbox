@@ -176,18 +176,18 @@ export default {
     const bookedDates = ref<Date[]>([]);
     const changeDescriptionsRef: Ref<Record<string, string>> = ref({});
     const tooltipVisible: Ref<DateTooltip> = ref({});
-    onMounted(async () => {
-    const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
+      onMounted(async () => {
+  const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
-    if (endMonthIndex.value > 11) {
-      endMonthIndex.value -= 12;
-      endYear.value += 1;
-    }
-  
+  if (endMonthIndex.value > 11) {
+    endMonthIndex.value -= 12;
+    endYear.value += 1;
+  }
+
   // Ensure the dates are not null
   const start = defaultStartDate || new Date();
   const end = defaultEndDate || new Date();
-  
+
   startDate.value = start;
   endDate.value = end;
   dateRange.value = `${formatDate(start)} - ${formatDate(end)}`;
@@ -283,7 +283,7 @@ const checkDateInputs = () => {
     });
     
     // getting default dates from url
-    const getDefaultDatesFromUrl = () => {
+ /*    const getDefaultDatesFromUrl = () => {
     var url = window.location.href;
     var urlObj = new URL(url);
     var fragment = urlObj.hash.substring(1);
@@ -317,6 +317,52 @@ const checkDateInputs = () => {
     return { startDate: date30DaysAgo, endDate: today };
   }
   return { startDate: new Date(), endDate: new Date() };
+} */
+const getDefaultDatesFromUrl = () => {
+  var url = window.location.href;
+  var urlObj = new URL(url);
+  var fragment = urlObj.hash.substring(1);
+  var fragmentParams = new URLSearchParams(fragment);
+  var periodParam = fragmentParams.get('period');
+
+  // Check local storage first
+  const storedStartDate = localStorage.getItem('selectedStartDate');
+  const storedEndDate = localStorage.getItem('selectedEndDate');
+  if (storedStartDate && storedEndDate) {
+    return { 
+      startDate: new Date(storedStartDate), 
+      endDate: new Date(storedEndDate) 
+    };
+  }
+
+  if (periodParam === 'day') {
+    var today = new Date();
+    return { startDate: today, endDate: today };
+  } 
+  else if (periodParam === 'week') {
+    var today = new Date();
+    var date30DaysAgo = new Date();
+    date30DaysAgo.setDate(today.getDate() - 30);  // Changed from 7 to 30
+    return { startDate: date30DaysAgo, endDate: today };
+  } 
+  else if (periodParam === 'range') {
+    var dateRange = fragmentParams.get('date')?.split(',');
+    var startDate = dateRange ? new Date(dateRange[0]) : null;
+    var endDate = dateRange ? new Date(dateRange[1]) : null;
+    return { startDate: startDate, endDate: endDate };
+  } 
+  else if (periodParam === 'month') {
+    var today = new Date();
+    var date30DaysAgo = new Date();
+    date30DaysAgo.setDate(today.getDate() - 30);
+    return { startDate: date30DaysAgo, endDate: today };
+  }
+  
+  // Default to 30 days if no valid period is found
+  var today = new Date();
+  var date30DaysAgo = new Date();
+  date30DaysAgo.setDate(today.getDate() - 29);
+  return { startDate: date30DaysAgo, endDate: today };
 }
 
 // getting description from versions
@@ -505,9 +551,15 @@ const updateDateRange = () => {
 
   if (startDate.value && endDate.value) {
     date = `${startDate.value.toLocaleDateString()} - ${endDate.value.toLocaleDateString()}`;
+    // Save to local storage
+    localStorage.setItem('selectedStartDate', startDate.value.toISOString());
+    localStorage.setItem('selectedEndDate', endDate.value.toISOString());
   } else if (startDate.value) {
     period = "day";
     date = startDate.value.toLocaleDateString();
+    // Save to local storage
+    localStorage.setItem('selectedStartDate', startDate.value.toISOString());
+    localStorage.setItem('selectedEndDate', startDate.value.toISOString());
   }
 
   appliedDateRange.value = date;
@@ -857,6 +909,7 @@ const isDropdownOpen = ref(false);
 .new_calendar_arrow {
   margin-bottom: 0px;
   margin-left: 4px;
+  margin-right: 4px;
   border-radius: 4px;
   border: 1px solid var(--Grey-200, #e6e7e8);
   background: var(--Grey-White, #fff);
@@ -952,6 +1005,7 @@ const isDropdownOpen = ref(false);
   align-items: center;
   justify-content: space-between;
   width: 60%;
+  margin-left: 15px;
 }
 
 #new_calendar_select_today {
@@ -1150,7 +1204,7 @@ const isDropdownOpen = ref(false);
 .new_calendar_dropdown-menu {
   position: absolute;
   top: 100%;
-  left: 60px;
+  left: 70px;
   z-index: 1000;
   display: block;
   min-width: 200px;
