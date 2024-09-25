@@ -463,32 +463,30 @@ const updateDateRange = () => {
 
     // arrow button for showing previous months
     const prevMonth = () => {
-      if (startMonthIndex.value > 0) {
-        startMonthIndex.value -= 1;
-      } else {
-        startMonthIndex.value = 11;
+      startMonthIndex.value -= 2;
+      endMonthIndex.value -= 2;
+      
+      if (startMonthIndex.value < 0) {
+        startMonthIndex.value += 12;
         startYear.value -= 1;
       }
-      if (endMonthIndex.value > 0) {
-        endMonthIndex.value -= 1;
-      } else {
-        endMonthIndex.value = 11;
+      if (endMonthIndex.value < 0) {
+        endMonthIndex.value += 12;
         endYear.value -= 1;
       }
     };
 
     // arrow button for showing following months
     const nextMonth = () => {
-      if (startMonthIndex.value < 11) {
-        startMonthIndex.value += 1;
-      } else {
-        startMonthIndex.value = 0;
+      startMonthIndex.value += 2;
+      endMonthIndex.value += 2;
+      
+      if (startMonthIndex.value > 11) {
+        startMonthIndex.value -= 12;
         startYear.value += 1;
       }
-      if (endMonthIndex.value < 11) {
-        endMonthIndex.value += 1;
-      } else {
-        endMonthIndex.value = 0;
+      if (endMonthIndex.value > 11) {
+        endMonthIndex.value -= 12;
         endYear.value += 1;
       }
     };
