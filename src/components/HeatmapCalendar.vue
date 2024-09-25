@@ -16,7 +16,6 @@
       <div class="new_calendar_date_range_picker" v-show="showDatePicker" ref="datePicker">
         <div class="new_calendar_header">
           <div class="new_calendar_input_wrapper">
-            <!-- input fields to type date manually -->
             <input type="date" v-model="dateInputs.start" @input="handleStartDateInput" class="new_calendar_date_input" id="new_calendar_left_input" /> <span> - </span>
             <input type="date" v-model="dateInputs.end" @input="handleEndDateInput" class="new_calendar_date_input" id="new_calendar_right_input" />
             <button id="new_calendar_code_counter">
@@ -488,7 +487,6 @@ const updateDateRange = () => {
   
   // Update the start date input
   dateInputs.start = start.toISOString().split('T')[0];
-  // Clear the end date input
   dateInputs.end = end.toISOString().split('T')[0];;
 };
 
@@ -1033,6 +1031,8 @@ const isDropdownOpen = ref(false);
     flex-shrink: 0;
     color: inherit;
     position: relative;
+    background: #449ff4;
+  color: #fff;
 }
 
 .new_calendar_day.booked:hover {
