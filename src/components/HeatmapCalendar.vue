@@ -8,8 +8,8 @@
           stroke="#4D5861" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       {{ appliedDateRange }}
-      <!-- <span class="calendar_toggle_btn" v-if="appliedHasBookedDaysInRange">
-        &lt;/&gt; {{ appliedBookedDaysCount }}</span> -->
+      <span class="calendar_toggle_btn" v-if="appliedHasBookedDaysInRange">
+        &lt;/&gt; {{ appliedBookedDaysCount }}</span>
     </button>
 
     <div class="new_calendar_wrapper">
@@ -120,9 +120,9 @@
               </div>
             </div>
           </div>
-         <!--  <p class="new_calendar_total_code_change_text">
+          <p class="new_calendar_total_code_change_text">
             {{ bookedDates.length }} Total Code Changes (to date)
-          </p> -->
+          </p>
         </div>
         <div class="new_calendar_apply_button_wrapper">
           <button @click="applyDateRange" class="new_calendar_apply_button"   :disabled="isApplyDisabled">
@@ -263,62 +263,21 @@ const checkDateInputs = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(response);
         bookedDates.value = data.result.map((item: any) => new Date(item.raw_date));
-
         // storing change description for future use
         const changeDescriptions = data.result.reduce((acc: any, item: any) => {
           acc[item.raw_date] = item.changeDescription;
           return acc;
         }, {});
         changeDescriptionsRef.value = changeDescriptions;
-        
-          console.log(data);
         } catch (error) {
-          console.error(error);
         }
           }
 
     onBeforeUnmount(() => {
       document.removeEventListener('click', handleClickOutside);
     });
-    
-    // getting default dates from url
- /*    const getDefaultDatesFromUrl = () => {
-    var url = window.location.href;
-    var urlObj = new URL(url);
-    var fragment = urlObj.hash.substring(1);
-    var fragmentParams = new URLSearchParams(fragment);
-    var periodParam = fragmentParams.get('period');
 
-    if (periodParam === 'day') {
-      var today = new Date();
-      return { startDate: today, endDate: today };
-  } 
-  // Get the date 7 days ago
-  else if (periodParam === 'week') {
-    var today = new Date();
-    var date7DaysAgo = new Date();
-    date7DaysAgo.setDate(today.getDate() - 7);
-    return { startDate: date7DaysAgo, endDate: today };
-  } 
-  // Get the date in range
-  else if (periodParam === 'range') {
-    var dateRange = fragmentParams.get('date')?.split(',');
-    var startDate = dateRange ? new Date(dateRange[0]) : null;
-    var endDate = dateRange ? new Date(dateRange[1]) : null;
-    return { startDate: startDate, endDate: endDate };
-    
-  } 
-  // Get the date in month
-  else if (periodParam === 'month') {
-    var today = new Date();
-    var date30DaysAgo = new Date();
-    date30DaysAgo.setDate(today.getDate() - 30);
-    return { startDate: date30DaysAgo, endDate: today };
-  }
-  return { startDate: new Date(), endDate: new Date() };
-} */
 const getDefaultDatesFromUrl = () => {
   var url = window.location.href;
   var urlObj = new URL(url);
@@ -334,6 +293,7 @@ const getDefaultDatesFromUrl = () => {
       startDate: new Date(storedStartDate), 
       endDate: new Date(storedEndDate) 
     };
+    
   }
 
   if (periodParam === 'day') {
@@ -591,8 +551,6 @@ const updateDateRange = () => {
     date: dateValue,
     url: url.toString()
   };
-
-  console.log("Emitted Data :", data);
   emit("on-filter-date-change", data);
 };
 
@@ -716,7 +674,6 @@ const handleQuickSelect = (event:any) => {
       start.setDate(start.getDate() - 89);
       break;
     case 'custom':
-      // Do nothing here, as we want to keep the manually selected dates
       return;
     default:
       return;
@@ -998,7 +955,8 @@ const isDropdownOpen = ref(false);
   font-size: 12px;
   color: #fff;
   font-weight: 700;
-  display: none;
+  /* display: none; */
+  display: flex;
 }
 
 #new_calendar_arrows_wrapper {
