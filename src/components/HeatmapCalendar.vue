@@ -69,25 +69,31 @@
                 </div>
               </div>
               <div class="new_calendar_days">
-                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(
-                  startYear,
-                  startMonthIndex
-                )" :key="index" :class="{
-                    selected: isSelected(Number(day), startMonthIndex),
-                    highlighted: isHighlighted(Number(day), startMonthIndex),
-                    'start-date': isStartDate(Number(day), startMonthIndex),
-                    'end-date': isEndDate(Number(day), startMonthIndex),
-                    booked: isBooked(Number(day), startMonthIndex),
-                  }" @click="selectDate(Number(day), startMonthIndex)">
-                  {{ day }}
-                  <div v-if="isBooked(Number(day), startMonthIndex)" class="new_calendar_tooltip"
+               <div class="new_calendar_day" 
+                v-for="(day, index) in daysInMonth(startYear, startMonthIndex)" 
+                :key="index"
+                :class="{
+                  selected: isSelected(Number(day), startMonthIndex),
+                  highlighted: isHighlighted(Number(day), startMonthIndex),
+                  'start-date': isStartDate(Number(day), startMonthIndex),
+                  'end-date': isEndDate(Number(day), startMonthIndex),
+                  booked: isBooked(Number(day), startMonthIndex),
+                }" 
+                @click="selectDate(Number(day), startMonthIndex)"
+                @mouseenter="showTooltip(index)"
+                @mouseleave="hideTooltip(index)">
+              {{ day }}
+              <div v-if="isBooked(Number(day), startMonthIndex)" 
+                  class="new_calendar_tooltip"  
                   v-show="tooltipVisible[index]">
-                  <h6 class="new_calendar_tooltip_header">
-                    Major Code Changes
-                  </h6>
-                  <p class="new_calendar_tooltip_list">{{ getChangeDescription(Number(day), startMonthIndex) }}</p>
-                </div>
-                </div>
+                <h6 class="new_calendar_tooltip_header">
+                  Major Code Changes
+                </h6>
+                <p class="new_calendar_tooltip_list">
+                  {{ getChangeDescription(Number(day), startMonthIndex) }}
+                </p>
+              </div>
+            </div>
               </div>
             </div>
             <div class="new_calendar" ref="endCalendar">
@@ -100,22 +106,31 @@
                 </div>
               </div>
               <div class="new_calendar_days">
-                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(endYear, endMonthIndex)" :key="index"
+                <div class="new_calendar_day" 
+                  v-for="(day, index) in daysInMonth(endYear, endMonthIndex)" 
+                  :key="index"
                   :class="{
                     selected: isSelected(Number(day), endMonthIndex),
                     highlighted: isHighlighted(Number(day), endMonthIndex),
                     'start-date': isStartDate(Number(day), endMonthIndex),
                     'end-date': isEndDate(Number(day), endMonthIndex),
                     booked: isBooked(Number(day), endMonthIndex),
-                  }" @click="selectDate(Number(day), endMonthIndex)">
-                  {{ day }}
-                  <div v-if="isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"  v-show="tooltipVisible[index]">
+                  }" 
+                  @click="selectDate(Number(day), endMonthIndex)"
+                  @mouseenter="showTooltip(index)"
+                  @mouseleave="hideTooltip(index)">
+                {{ day }}
+                <div v-if="isBooked(Number(day), endMonthIndex)" 
+                    class="new_calendar_tooltip"  
+                    v-show="tooltipVisible[index]">
                   <h6 class="new_calendar_tooltip_header">
                     Major Code Changes
                   </h6>
-                  <p class="new_calendar_tooltip_list">{{ getChangeDescription(Number(day), endMonthIndex) }}</p>
+                  <p class="new_calendar_tooltip_list">
+                    {{ getChangeDescription(Number(day), endMonthIndex) }}
+                  </p>
                 </div>
-                </div>
+              </div>
               </div>
             </div>
           </div>
@@ -175,6 +190,7 @@ export default {
     const bookedDates = ref<Date[]>([]);
     const changeDescriptionsRef: Ref<Record<string, string>> = ref({});
     const tooltipVisible: Ref<DateTooltip> = ref({});
+      // const tooltipVisible = ref<{ [key: number]: boolean }>({});
       onMounted(async () => {
   const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
