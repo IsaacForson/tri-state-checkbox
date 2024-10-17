@@ -408,27 +408,25 @@ export default {
 
     //  get all the descriptions for the booked days within the selected range
     const getBookedDaysDescriptions = computed(() => {
-      if (!startDate.value || !endDate.value) return [];
+  if (!startDate.value || !endDate.value) return [];
 
-      const start = startDate.value;
-      const end = endDate.value;
+  const start = startDate.value;
+  const end = endDate.value;
 
-      return Object.entries(webVariantsData.value)
-        .filter(([date]) => {
-          const currentDate = new Date(date);
-          return currentDate >= start && currentDate <= end;
-        })
-        .map(([date, devices]) => {
-          const deviceValues = Object.values(devices as Record<string, any[]>);
-          const description = deviceValues.length > 0 && deviceValues[0].length > 0
-            ? deviceValues[0][0].changeDescription
-            : 'No description available';
-          return {
-            date: new Date(date),
-            description
-          };
-        });
+  return Object.entries(webVariantsData.value)
+    .filter(([date]) => {
+      const currentDate = new Date(date);
+      return currentDate >= start && currentDate <= end;
+    })
+    .flatMap(([date, items]) => {
+      // Assuming all items for a date have the same description
+      const description = items[0]?.changeDescription || 'No description available';
+      return {
+        date: new Date(date),
+        description
+      };
     });
+});
 
     // toggling date button (visible / hidden)
     const toggleDatePickerVisibility = () => {
@@ -749,28 +747,22 @@ export default {
     };
 
     const appliedHasBookedDaysInRange = computed(() => {
-      if (!appliedDateRange.value) {
-        return false;
-      }
-      const [start, end] = appliedDateRange.value
-        .split(" - ")
-        .map((date: string) => new Date(date));
-      return bookedDates.value.some(
-        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
-      );
-    });
+  if (!appliedDateRange.value) return false;
+  const [start, end] = appliedDateRange.value.split(" - ").map(date => new Date(date));
+  return Object.keys(webVariantsData.value).some(date => {
+    const currentDate = new Date(date);
+    return currentDate >= start && currentDate <= end;
+  });
+});
 
-    const appliedBookedDaysCount = computed(() => {
-      if (!appliedDateRange.value) {
-        return 0;
-      }
-      const [start, end] = appliedDateRange.value
-        .split(" - ")
-        .map((date: string) => new Date(date));
-      return bookedDates.value.filter(
-        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
-      ).length;
-    });
+const appliedBookedDaysCount = computed(() => {
+  if (!appliedDateRange.value) return 0;
+  const [start, end] = appliedDateRange.value.split(" - ").map(date => new Date(date));
+  return Object.keys(webVariantsData.value).filter(date => {
+    const currentDate = new Date(date);
+    return currentDate >= start && currentDate <= end;
+  }).length;
+});
 
     const formatRange = (start: Date | null, end: Date | null) => {
       const startString = start
