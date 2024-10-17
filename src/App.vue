@@ -1,5 +1,5 @@
 <template>
-  <HeatmapCalendar v-model="val" label="Vite + Vue" />
+  <HeatmapCalendar v-model="val" label="Vite + Vue"/>
 </template>
 
 <script setup lang="ts">
