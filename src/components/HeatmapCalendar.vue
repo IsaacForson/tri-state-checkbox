@@ -513,18 +513,31 @@ onMounted(async () => {
   const start = defaultStartDate || new Date();
   const end = defaultEndDate || new Date();
 
+  // Set the component's date values
   startDate.value = start;
   endDate.value = end;
-  dateRange.value = `${format(start, 'M/d/yyyy')} - ${format(end, 'M/d/yyyy')}`;
+  
+  // Calculate the difference in days to set correct selected range
+  const diffDays = differenceInDays(end, start);
+  if (diffDays === 6) {
+    selectedRange.value = 'Last 7 Days';
+  } else if (diffDays === 29) {
+    selectedRange.value = 'Last 30 Days';
+  } else if (diffDays === 89) {
+    selectedRange.value = 'Last 90 Days';
+  } else {
+    selectedRange.value = 'Custom';
+  }
+  
+  // Rest of your existing onMounted code...
+  dateRange.value = `${format(start, 'MM/dd/yyyy')} - ${format(end, 'MM/dd/yyyy')}`;
   appliedDateRange.value = dateRange.value;
-
-  // Set the input field values
-  dateInputs.start = start.toISOString().split('T')[0];
-  dateInputs.end = end.toISOString().split('T')[0];
-
+  startDateInput.value = format(start, 'MMM d, yyyy');
+  endDateInput.value = format(end, 'MMM d, yyyy');
+  
   document.addEventListener('click', handleClickOutside);
   await loadWebVariants();
-})
+});
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
