@@ -233,18 +233,21 @@ const handleEndDateInput = () => {
 
 const selectDate = (date) => {
   if (!startDate.value || (startDate.value && endDate.value)) {
-    startDate.value = date
-    endDate.value = null
-    startDateInput.value = format(date, 'MMM d, yyyy')
+    startDate.value = date;
+    endDate.value = null;
+    startDateInput.value = format(date, 'MMM d, yyyy');
+    endDateInput.value = '';
   } else {
     if (isBefore(date, startDate.value)) {
-      endDate.value = startDate.value
-      startDate.value = date
+      endDate.value = startDate.value;
+      startDate.value = date;
+      startDateInput.value = format(date, 'MMM d, yyyy');
+      endDateInput.value = format(endDate.value, 'MMM d, yyyy');
     } else {
-      endDate.value = date
+      endDate.value = date;
+      endDateInput.value = format(date, 'MMM d, yyyy');
     }
-    endDateInput.value = format(endDate.value, 'MMM d, yyyy')
-    checkCustomRange()
+    checkCustomRange();
   }
 }
 
@@ -529,7 +532,6 @@ onMounted(async () => {
     selectedRange.value = 'Custom';
   }
   
-  // Rest of your existing onMounted code...
   dateRange.value = `${format(start, 'MM/dd/yyyy')} - ${format(end, 'MM/dd/yyyy')}`;
   appliedDateRange.value = dateRange.value;
   startDateInput.value = format(start, 'MMM d, yyyy');
