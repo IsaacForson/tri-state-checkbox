@@ -1,31 +1,30 @@
 <template>
   <div>
-    <button class="date-trigger" @click="toggleCalendar">
+    <button class="new_heatmap_calendar_date-trigger" @click="toggleCalendar">
       <svg style="margin-right: 10px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
         <path d="M7.25 17.5534V17.4688M12.3125 17.5534V17.4688M12.3125 12.9688V12.8842M16.8125 12.9688V12.8842M3.875 8.46875H19.625M5.91071 2V3.68771M17.375 2V3.6875M17.375 3.6875H6.125C4.26104 3.6875 2.75 5.19854 2.75 7.0625V18.3126C2.75 20.1766 4.26104 21.6876 6.125 21.6876H17.375C19.239 21.6876 20.75 20.1766 20.75 18.3126L20.75 7.0625C20.75 5.19854 19.239 3.6875 17.375 3.6875Z" stroke="#4D5861" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       {{ appliedDateRange }}
-      <span v-if="hasBookedDaysInRange" class="booked-count">
+      <span v-if="hasBookedDaysInRange" class="new_heatmap_calendar_booked-count">
          {{ bookedDaysCount }}
       </span>
     </button>
 
-    <div v-if="isCalendarVisible" class="calendar-container">
-      <div class="calendar-header">
-        <button class="nav-button" @click="previousMonth">
+    <div v-if="isCalendarVisible" class="new_heatmap_calendar_container">
+      <div class="new_heatmap_calendar_header">
+        <button class="new_heatmap_calendar_nav-button" @click="previousMonth">
           <span><img style="width: 24px;" src="https://i.ibb.co/9pxmXKv/Arrow-Right-1.png" alt=""></span>
         </button>
         <h2>{{ format(currentMonth, 'MMMM yyyy') }}</h2>
-        <button class="nav-button" @click="nextMonth">
+        <button class="new_heatmap_calendar_nav-button" @click="nextMonth">
           <span><img style="width: 24px;" src="https://i.ibb.co/4RZXQrt/Arrow-Right.png" alt=""></span>
         </button>
       </div>
 
-      <!-- Date Range Display -->
-      <div class="date-range">
-        <div class="date-input">
+      <div class="new_heatmap_calendar_date-range">
+        <div class="new_heatmap_calendar_date-input">
           <input 
-          class="new_calendar_input"
+            class="new_heatmap_calendar_input"
             type="text" 
             v-model="startDateInput"
             @input="handleStartDateInput"
@@ -33,7 +32,7 @@
           />
           <span>-</span>
           <input 
-          class="new_calendar_input"
+            class="new_heatmap_calendar_input"
             type="text" 
             v-model="endDateInput"
             @input="handleEndDateInput"
@@ -42,18 +41,17 @@
         </div>
       </div>
 
-      <!-- Quick Select -->
-      <div class="quick-select">
+      <div class="new_heatmap_calendar_quick-select">
         <button 
-          class="quick-select-button" 
+          class="new_heatmap_calendar_quick-select-button" 
           @click="toggleDropdown"
         >
           {{ selectedRange }}
-          <span class="dropdown-arrow">
+          <span class="new_heatmap_calendar_dropdown-arrow">
             <img style="width: 16px;" src="https://i.ibb.co/bRszW9x/Drop.png" alt="">
           </span>
         </button>
-        <div v-if="showDropdown" class="dropdown-menu" @click.stop>
+        <div v-if="showDropdown" class="new_heatmap_calendar_dropdown-menu" @click.stop>
           <div @click="selectRange('Today')">Today</div>
           <div @click="selectRange('Yesterday')">Yesterday</div>
           <div @click="selectRange('Last 7 Days')">Last 7 Days</div>
@@ -63,43 +61,44 @@
         </div>
       </div>
 
-      <!-- Calendar Grid -->
-      <div class="calendar-grid">
-        <div v-for="weekDay in weekDays" :key="weekDay" class="weekday">
+      <div class="new_heatmap_calendar_grid">
+        <div v-for="weekDay in weekDays" :key="weekDay" class="new_heatmap_calendar_weekday">
           {{ weekDay }}
         </div>
 
-        <div v-for="day in calendarDays" :key="day.date" class="day"
-        :class="{
-          'selected': isSelected(day.date),
-          'both-dates-selected': startDate && endDate && isSelected(day.date),
-          'in-range': isInRange(day.date),
-          'today': isToday(day.date),
-          'disabled': !isSameMonth(day.date, currentMonth),
-          'booked': isBooked(day.date),
-          'range-start': isRangeStart(day.date),
-          'range-end': isRangeEnd(day.date)
-        }"
-        @click="selectDate(day.date)"
-        @mouseenter="showTooltip(day.date)"
-        @mouseleave="hideTooltip"
-      >
-<span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="base-background"></span>
-  <span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="overlay-background"></span>
-  {{ format(day.date, 'd') }}
-  <div v-if="isBooked(day.date) && activeTooltip === format(day.date, 'yyyy-MM-dd')" 
-       class="day-tooltip">
-    {{ getBookedDescription(day.date) }}
-  </div>
+        <div 
+          v-for="day in calendarDays" 
+          :key="day.date" 
+          class="new_heatmap_calendar_day"
+          :class="{
+            'new_heatmap_calendar_selected': isSelected(day.date),
+            'new_heatmap_calendar_both-dates-selected': startDate && endDate && isSelected(day.date),
+            'new_heatmap_calendar_in-range': isInRange(day.date),
+            'new_heatmap_calendar_today': isToday(day.date),
+            'new_heatmap_calendar_disabled': !isSameMonth(day.date, currentMonth),
+            'new_heatmap_calendar_booked': isBooked(day.date),
+            'new_heatmap_calendar_range-start': isRangeStart(day.date),
+            'new_heatmap_calendar_range-end': isRangeEnd(day.date)
+          }"
+          @click="selectDate(day.date)"
+          @mouseenter="showTooltip(day.date)"
+          @mouseleave="hideTooltip"
+        >
+          <span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="new_heatmap_calendar_base-background"></span>
+          <span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="new_heatmap_calendar_overlay-background"></span>
+          {{ format(day.date, 'd') }}
+          <div v-if="isBooked(day.date) && activeTooltip === format(day.date, 'yyyy-MM-dd')" 
+               class="new_heatmap_calendar_day-tooltip">
+            {{ getBookedDescription(day.date) }}
+          </div>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button class="cancel-button" @click="cancel">Cancel</button>
-        <button style="display: flex;" class="apply-button" @click="applyAndClose">
+      <div class="new_heatmap_calendar_action-buttons">
+        <button class="new_heatmap_calendar_cancel-button" @click="cancel">Cancel</button>
+        <button style="display: flex;" class="new_heatmap_calendar_apply-button" @click="applyAndClose">
           <span>Apply</span>
-          <img style="width: 20px; margin-left: 5px;" src="https://i.ibb.co/TL3Cd6G/system-solid-31-check-hover-check-1.png" alt="">
+          <img class=".new_heatmap_calendar_apply-button-img" src="https://i.ibb.co/TL3Cd6G/system-solid-31-check-hover-check-1.png" alt="">
         </button>
       </div>
     </div>
@@ -375,15 +374,13 @@ const constructUrl = (period) => {
   return url.toString()
 }
 
-    // getting items using url
-    const getItemFromUrl = (item) => {
-      const parsedUrl = new URL(currentUrl.value);
-      const searchParams = new URLSearchParams(parsedUrl.search);
-      const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
-      return searchParams.get(item) || hashParams.get(item);
-    };
+const getItemFromUrl = (item) => {
+  const parsedUrl = new URL(currentUrl.value);
+  const searchParams = new URLSearchParams(parsedUrl.search);
+  const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
+  return searchParams.get(item) || hashParams.get(item);
+};
 
-// Add this new method for loading variants
 async function loadWebVariants() {
   if (!props.systemOfRecords) {
     bookedDates.value = []
@@ -425,7 +422,6 @@ async function loadWebVariants() {
   }
 }
 
-// Add these new computed properties
 const getBookedDaysDescriptions = computed(() => {
   if (!startDate.value || !endDate.value) return []
   return Object.entries(webVariantsData.value)
@@ -502,11 +498,10 @@ const cancel = () => {
 }
 
 const handleClickOutside = (e) => {
-  const calendar = document.querySelector('.calendar-container')
-  const trigger = document.querySelector('.date-trigger')
-  const dropdown = document.querySelector('.dropdown-menu')
+  const calendar = document.querySelector('.new_heatmap_calendar_container')
+  const trigger = document.querySelector('.new_heatmap_calendar_date-trigger')
+  const dropdown = document.querySelector('.new_heatmap_calendar_dropdown-menu')
   
-  // Don't close if clicking inside calendar, trigger, or dropdown
   if (calendar && 
       !calendar.contains(e.target) && 
       !trigger.contains(e.target) && 
@@ -515,43 +510,6 @@ const handleClickOutside = (e) => {
   }
 }
 
-onMounted(async () => {
-  const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
-
-  // Ensure the dates are not null
-  const start = defaultStartDate || new Date();
-  const end = defaultEndDate || new Date();
-
-  // Set the component's date values
-  startDate.value = start;
-  endDate.value = end;
-  
-  // Calculate the difference in days to set correct selected range
-  const diffDays = differenceInDays(end, start);
-  if (diffDays === 6) {
-    selectedRange.value = 'Last 7 Days';
-  } else if (diffDays === 29) {
-    selectedRange.value = 'Last 30 Days';
-  } else if (diffDays === 89) {
-    selectedRange.value = 'Last 90 Days';
-  } else {
-    selectedRange.value = 'Custom';
-  }
-  
-  dateRange.value = `${format(start, 'MM/dd/yyyy')} - ${format(end, 'MM/dd/yyyy')}`;
-  appliedDateRange.value = dateRange.value;
-  startDateInput.value = format(start, 'MMM d, yyyy');
-  endDateInput.value = format(end, 'MMM d, yyyy');
-  
-  document.addEventListener('click', handleClickOutside);
-  await loadWebVariants();
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-
-// Add this function to your script
 const getDefaultDatesFromUrl = () => {
   var url = window.location.href;
   var urlObj = new URL(url);
@@ -559,7 +517,6 @@ const getDefaultDatesFromUrl = () => {
   var fragmentParams = new URLSearchParams(fragment);
   var periodParam = fragmentParams.get('period');
 
-  // Check local storage first
   const storedStartDate = localStorage.getItem('selectedStartDate');
   const storedEndDate = localStorage.getItem('selectedEndDate');
   if (storedStartDate && storedEndDate) {
@@ -599,7 +556,6 @@ const getDefaultDatesFromUrl = () => {
   return { startDate: date30DaysAgo, endDate: today };
 }
 
-// Then modify your onMounted hook
 onMounted(async () => {
   const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
@@ -626,10 +582,13 @@ onMounted(async () => {
   await loadWebVariants();
 });
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
-.date-trigger {
+.new_heatmap_calendar_date-trigger {
   display: flex;
   align-items: center;
   border-radius: 10px;
@@ -643,7 +602,7 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.booked-count {
+.new_heatmap_calendar_booked-count {
   border-radius: 4px;
   background: #449ff4;
   padding: 2px 7px;
@@ -653,7 +612,7 @@ onMounted(async () => {
   margin-left: 10px;
 }
 
-.calendar-container {
+.new_heatmap_calendar_container {
   position: absolute;
   width: 311px;
   background: white;
@@ -663,37 +622,37 @@ onMounted(async () => {
   z-index: 1000;
 }
 
-.calendar-header {
+.new_heatmap_calendar_header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
 }
 
-.calendar-header h2 {
+.new_heatmap_calendar_header h2 {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
 }
 
-.nav-button {
+.new_heatmap_calendar_nav-button {
   border: none;
   background: none;
   cursor: pointer;
   padding: 8px;
 }
 
-.date-range {
+.new_heatmap_calendar_date-range {
   margin-bottom: 16px;
 }
 
-.date-input {
+.new_heatmap_calendar_date-input {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.date-input .new_calendar_input {
+.new_heatmap_calendar_input {
   padding: 12px;
   border: 1px solid #E6E7E8;
   border-radius: 8px;
@@ -702,12 +661,12 @@ onMounted(async () => {
   color: #7F7F7F;
 }
 
-.quick-select {
+.new_heatmap_calendar_quick-select {
   position: relative;
   margin-bottom: 24px;
 }
 
-.quick-select-button {
+.new_heatmap_calendar_quick-select-button {
   width: 100%;
   padding: 12px;
   border: 1px solid #E6E7E8;
@@ -721,7 +680,7 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.dropdown-menu {
+.new_heatmap_calendar_dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -733,30 +692,30 @@ onMounted(async () => {
   z-index: 10;
 }
 
-.dropdown-menu div {
+.new_heatmap_calendar_dropdown-menu div {
   padding: 12px;
   cursor: pointer;
   font-size: 14px;
 }
 
-.dropdown-menu div:hover {
+.new_heatmap_calendar_dropdown-menu div:hover {
   background: #f5f5f5;
 }
 
-.calendar-grid {
+.new_heatmap_calendar_grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
 
-.weekday {
+.new_heatmap_calendar_weekday {
   text-align: center;
   font-size: 14px;
   color: #666;
   padding: 8px;
 }
 
-.day {
+.new_heatmap_calendar_day {
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -767,8 +726,7 @@ onMounted(async () => {
   z-index: 2;
 }
 
-/* Base background span */
-.base-background {
+.new_heatmap_calendar_base-background {
   position: absolute;
   width: 32px;
   height: 32px;
@@ -777,8 +735,7 @@ onMounted(async () => {
   z-index: -2;
 }
 
-/* Overlay background span */
-.overlay-background {
+.new_heatmap_calendar_overlay-background {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -787,24 +744,23 @@ onMounted(async () => {
   z-index: -1;
 }
 
-.day.selected {
+.new_heatmap_calendar_day.new_heatmap_calendar_selected {
   color: white;
   z-index: 2;
 }
 
-
-.day.both-dates-selected {
+.new_heatmap_calendar_day.new_heatmap_calendar_both-dates-selected {
   background: #DAFBED;
 }
 
-.day.in-range {
+.new_heatmap_calendar_day.new_heatmap_calendar_in-range {
   background: #DAFBED;
   border-radius: 0;
   position: relative;
   z-index: 2;
 }
 
-.day.in-range::before {
+.new_heatmap_calendar_day.new_heatmap_calendar_in-range::before {
   content: '';
   position: absolute;
   top: 0;
@@ -815,37 +771,38 @@ onMounted(async () => {
   z-index: -1;
 }
 
-.day.range-end::before {
-  background: transparent;
-}
-.day.range-start::before {
+.new_heatmap_calendar_day.new_heatmap_calendar_range-end::before {
   background: transparent;
 }
 
-.day.range-start {
+.new_heatmap_calendar_day.new_heatmap_calendar_range-start::before {
+  background: transparent;
+}
+
+.new_heatmap_calendar_day.new_heatmap_calendar_range-start {
   border-radius: 20px 0px 0px 20px;
 }
 
-.day.range-end {
+.new_heatmap_calendar_day.new_heatmap_calendar_range-end {
   border-radius: 0px 20px 20px 0px;
 }
 
-.day.today {
+.new_heatmap_calendar_day.new_heatmap_calendar_today {
   font-weight: bold;
 }
 
-.day.disabled {
+.new_heatmap_calendar_day.new_heatmap_calendar_disabled {
   color: #ccc;
   cursor: default;
 }
 
-.day.booked {
+.new_heatmap_calendar_day.new_heatmap_calendar_booked {
   background: #F6F6F6;
   color: white;
   border-radius: 50%;
 }
 
-.day-tooltip {
+.new_heatmap_calendar_day-tooltip {
   position: absolute;
   top: calc(100% + 5px);
   left: 50%;
@@ -860,39 +817,48 @@ onMounted(async () => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.action-buttons {
+.new_heatmap_calendar_action-buttons {
   display: flex;
   justify-content: space-between;
   margin-top: 24px;
 }
 
-.cancel-button, .apply-button {
-  padding: 12px 12px;
+.new_heatmap_calendar_cancel-button,
+.new_heatmap_calendar_apply-button {
+  padding: 10px 10px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.cancel-button {
+.new_heatmap_calendar_cancel-button {
   background: white;
   border: 1px solid #E6E7E8;
   color: #666;
 }
 
-.apply-button {
+.new_heatmap_calendar_apply-button {
   background: #2EC666;
   border: none;
   color: white;
   display: flex;
   align-items: center;
 }
-
-.apply-button img {
-  margin-left: 8px;
+.new_heatmap_calendar_apply-button:hover {
+  background: #27c160;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
 }
 
-.apply-button:disabled {
+.new_heatmap_calendar_apply-button img {
+  margin-left: 8px;
+  width: 20px; margin-left: 5px;
+}
+
+.new_heatmap_calendar_apply-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
