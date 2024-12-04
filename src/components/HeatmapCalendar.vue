@@ -69,27 +69,30 @@
         </div>
 
         <div
-          v-for="day in calendarDays"
-          :key="day.date"
-          class="day"
-          :class="{
-            'selected': isSelected(day.date),
-            'in-range': isInRange(day.date),
-            'today': isToday(day.date),
-            'disabled': !isSameMonth(day.date, currentMonth),
-            'booked': isBooked(day.date),
-            'range-start': isRangeStart(day.date),
-            'range-end': isRangeEnd(day.date)
-          }"
-          @click="selectDate(day.date)"
-          @mouseenter="showTooltip(day.date)"
-          @mouseleave="hideTooltip"
-        >
-          {{ format(day.date, 'd') }}
-          <div v-if="isBooked(day.date) && activeTooltip === format(day.date, 'yyyy-MM-dd')" 
-               class="day-tooltip">
-            {{ getBookedDescription(day.date) }}
-          </div>
+  v-for="day in calendarDays"
+  :key="day.date"
+  class="day"
+  :class="{
+    'selected': isSelected(day.date),
+    'both-dates-selected': startDate && endDate && isSelected(day.date),
+    'in-range': isInRange(day.date),
+    'today': isToday(day.date),
+    'disabled': !isSameMonth(day.date, currentMonth),
+    'booked': isBooked(day.date),
+    'range-start': isRangeStart(day.date),
+    'range-end': isRangeEnd(day.date)
+  }"
+  @click="selectDate(day.date)"
+  @mouseenter="showTooltip(day.date)"
+  @mouseleave="hideTooltip"
+>
+<span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="base-background"></span>
+  <span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="overlay-background"></span>
+  {{ format(day.date, 'd') }}
+  <div v-if="isBooked(day.date) && activeTooltip === format(day.date, 'yyyy-MM-dd')" 
+       class="day-tooltip">
+    {{ getBookedDescription(day.date) }}
+  </div>
         </div>
       </div>
 
@@ -761,10 +764,34 @@ onMounted(async () => {
   z-index: 2;
 }
 
-.day.selected {
+/* Base background span */
+.base-background {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: #DAFBED;
+  border-radius: 8px;
+  z-index: -2;
+}
+
+/* Overlay background span */
+.overlay-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
   background: #2EC666;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.day.selected {
   color: white;
   z-index: 2;
+}
+
+.day.both-dates-selected {
+  background: #DAFBED;
+  
 }
 
 .day.in-range {
@@ -786,11 +813,11 @@ onMounted(async () => {
 }
 
 .day.range-start {
-  border-radius: 50%;
+  border-radius: 20px 0px 0px 20px;
 }
 
 .day.range-end {
-  border-radius: 50%;
+  border-radius: 0px 20px 20px 0px;
 }
 
 .day.today {
