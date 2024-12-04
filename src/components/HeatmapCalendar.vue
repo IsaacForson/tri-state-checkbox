@@ -143,6 +143,11 @@ const emit = defineEmits(['on-filter-date-change'])
 const currentMonth = ref(new Date())
 const startDate = ref(null)
 const endDate = ref(null)
+const dateRange = ref('')
+const dateInputs = {
+  start: '',
+  end: ''
+}
 const showDropdown = ref(false)
 const selectedRange = ref('Last 7 Days')
 const isCalendarVisible = ref(false)
@@ -156,6 +161,7 @@ const activeVariantTooltip = ref(null)
 const variantDescriptions = ref({})
 const bookedDates = ref([])
 const changeDescriptionsRef = ref({})
+const currentUrl = ref(window.location.href);
 
 // Computed
 const weekDays = computed(() => {
@@ -360,6 +366,14 @@ const constructUrl = (period) => {
   return url.toString()
 }
 
+    // getting items using url
+    const getItemFromUrl = (item) => {
+      const parsedUrl = new URL(currentUrl.value);
+      const searchParams = new URLSearchParams(parsedUrl.search);
+      const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
+      return searchParams.get(item) || hashParams.get(item);
+    };
+
 // Add this new method for loading variants
 async function loadWebVariants() {
   if (!props.systemOfRecords) {
@@ -460,7 +474,8 @@ const applyDateRange = () => {
     data.downloadedUrls = downloadedUrls
   }
 
-  console.log("About to emit:", data);
+  const plainData = JSON.parse(JSON.stringify(data));
+  console.log("Emitted data:", plainData);
   emit("on-filter-date-change", data);
 }
 
@@ -492,13 +507,103 @@ const handleClickOutside = (e) => {
 }
 
 onMounted(async () => {
+  const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
+
+  // Ensure the dates are not null
+  const start = defaultStartDate || new Date();
+  const end = defaultEndDate || new Date();
+
+  startDate.value = start;
+  endDate.value = end;
+  dateRange.value = `${format(start, 'M/d/yyyy')} - ${format(end, 'M/d/yyyy')}`;
+  appliedDateRange.value = dateRange.value;
+
+  // Set the input field values
+  dateInputs.start = start.toISOString().split('T')[0];
+  dateInputs.end = end.toISOString().split('T')[0];
+
   document.addEventListener('click', handleClickOutside);
-  await loadWebVariants()
+  await loadWebVariants();
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+// Add this function to your script
+const getDefaultDatesFromUrl = () => {
+  var url = window.location.href;
+  var urlObj = new URL(url);
+  var fragment = urlObj.hash.substring(1);
+  var fragmentParams = new URLSearchParams(fragment);
+  var periodParam = fragmentParams.get('period');
+
+  // Check local storage first
+  const storedStartDate = localStorage.getItem('selectedStartDate');
+  const storedEndDate = localStorage.getItem('selectedEndDate');
+  if (storedStartDate && storedEndDate) {
+    return {
+      startDate: new Date(storedStartDate),
+      endDate: new Date(storedEndDate)
+    };
+  }
+
+  if (periodParam === 'day') {
+    var today = new Date();
+    return { startDate: today, endDate: today };
+  }
+  else if (periodParam === 'week') {
+    var today = new Date();
+    var date30DaysAgo = new Date();
+    date30DaysAgo.setDate(today.getDate() - 6);
+    return { startDate: date30DaysAgo, endDate: today };
+  }
+  else if (periodParam === 'range') {
+    var dateRange = fragmentParams.get('date')?.split(',');
+    var startDate = dateRange ? new Date(dateRange[0]) : null;
+    var endDate = dateRange ? new Date(dateRange[1]) : null;
+    return { startDate: startDate, endDate: endDate };
+  }
+  else if (periodParam === 'month') {
+    var today = new Date();
+    var date30DaysAgo = new Date();
+    date30DaysAgo.setDate(today.getDate() - 29);
+    return { startDate: date30DaysAgo, endDate: today };
+  }
+
+  // Default to 30 days if no valid period is found
+  var today = new Date();
+  var date30DaysAgo = new Date();
+  date30DaysAgo.setDate(today.getDate() - 29);
+  return { startDate: date30DaysAgo, endDate: today };
+}
+
+// Then modify your onMounted hook
+onMounted(async () => {
+  const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
+
+  // Ensure the dates are not null
+  const start = defaultStartDate || new Date();
+  const end = defaultEndDate || new Date();
+
+  // Set the component's date values
+  startDate.value = start;
+  endDate.value = end;
+  
+  // Update the displayed date range
+  dateRange.value = `${format(start, 'MM/dd/yyyy')} - ${format(end, 'MM/dd/yyyy')}`;
+  appliedDateRange.value = dateRange.value;
+
+  // Set the input field values
+  startDateInput.value = format(start, 'MMM d, yyyy');
+  endDateInput.value = format(end, 'MMM d, yyyy');
+
+  // Add event listener for clicks outside calendar
+  document.addEventListener('click', handleClickOutside);
+
+  // Load web variants data
+  await loadWebVariants();
+});
 
 </script>
 
@@ -508,7 +613,7 @@ onUnmounted(() => {
   align-items: center;
   border-radius: 10px;
   border: 1px solid var(--Grey-200, #e6e7e8);
-  padding: 12.5px 10px;
+  padding: 12px 10px;
   background: var(--Grey-White, #fff);
   box-shadow: 0px 1px 2px 0px rgba(26, 40, 53, 0.09);
   color: var(--Grey-800, #34404b);

@@ -9,6 +9,8 @@
 import { ref } from "vue";
 import HeatmapCalendar from "./components/HeatmapCalendar.vue";
 
+const systemOfRecords = ref(false);
+
 const handleDateChange = (data: {
   period: string;
   date: string;
@@ -17,6 +19,4 @@ const handleDateChange = (data: {
 }) => {
   console.log(data);
 };
-
-const systemOfRecords = ref(false);
 </script>
