@@ -98,10 +98,11 @@
                     'start-date': isStartDate(Number(day), startMonthIndex),
                     'end-date': isEndDate(Number(day), startMonthIndex),
                     booked: isBooked(Number(day), startMonthIndex),
-                  }" @click="selectDate(Number(day), startMonthIndex)" @mouseenter="showTooltip(index)"
-                  @mouseleave="hideTooltip(index)">
+                  }" @click="selectDate(Number(day), startMonthIndex)" 
+                  @mouseenter="systemOfRecords && showTooltip(index)"
+                  @mouseleave="systemOfRecords && hideTooltip(index)">
                   {{ day }}
-                  <div v-if="isBooked(Number(day), startMonthIndex)" class="new_calendar_tooltip"
+                  <div v-if="systemOfRecords && isBooked(Number(day), startMonthIndex)" class="new_calendar_tooltip"
                     v-show="tooltipVisible[index]">
                     <h6 class="new_calendar_tooltip_header">
                       Major Code Changes
@@ -123,17 +124,18 @@
                 </div>
               </div>
               <div class="new_calendar_days">
-                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(endYear, endMonthIndex)" :key="index"
-                  :class="{
+                <div class="new_calendar_day" v-for="(day, index) in daysInMonth(startYear, endMonthIndex)"
+                  :key="index" :class="{
                     selected: isSelected(Number(day), endMonthIndex),
                     highlighted: isHighlighted(Number(day), endMonthIndex),
                     'start-date': isStartDate(Number(day), endMonthIndex),
                     'end-date': isEndDate(Number(day), endMonthIndex),
                     booked: isBooked(Number(day), endMonthIndex),
-                  }" @click="selectDate(Number(day), endMonthIndex)" @mouseenter="showTooltip(index)"
-                  @mouseleave="hideTooltip(index)">
+                  }" @click="selectDate(Number(day), endMonthIndex)" 
+                  @mouseenter="systemOfRecords && showTooltip(index)"
+                  @mouseleave="systemOfRecords && hideTooltip(index)">
                   {{ day }}
-                  <div v-if="isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"
+                  <div v-if="systemOfRecords && isBooked(Number(day), endMonthIndex)" class="new_calendar_tooltip"
                     v-show="tooltipVisible[index]">
                     <h6 class="new_calendar_tooltip_header">
                       Major Code Changes
@@ -186,11 +188,6 @@ export default {
   },
   //@ts-ignore
   setup(props, { emit }) {
-    console.log("Initial systemOfRecords value:", props.systemOfRecords);
-    
-    watch(() => props.systemOfRecords, (newValue) => {
-      console.log("systemOfRecords changed to:", newValue);
-    });
     type QuickOptionKey = 'today' | 'last7days' | 'last30days' | 'last90days' | 'custom';
     // const selectedQuickOption = ref('');
     const selectedQuickOption = ref<QuickOptionKey | ''>('');
@@ -298,7 +295,10 @@ export default {
 
     //  Defined loadWebVariants function 
     async function loadWebVariants() {
-      if (!props.systemOfRecords) {
+  if (!props.systemOfRecords) {
+    bookedDates.value = [];
+    changeDescriptionsRef.value = {};
+    webVariantsData.value = {};
     return;
   }
   const url = `/index.php?module=API&format=json&method=HeatmapSessionRecording.loadWebVariants&idSite=${getItemFromUrl('idSite')}&idSiteHsr=${getItemFromUrl('subcategory')}`;
@@ -309,22 +309,27 @@ export default {
     }
     const data = await response.json();
 
-    if (data.status === "success" && data.result && typeof data.result === 'object') {
-      // Store the entire result object
-      webVariantsData.value = data.result;
+    if (data.status === "success" && Array.isArray(data.result)) {
+      // Create an object to store the data by date
+      const dataByDate: Record<string, any> = {};
 
-      // Update bookedDates with all dates
-      bookedDates.value = Object.keys(data.result).map(date => new Date(date));
+      data.result.forEach((item: any) => {
+        const date = item.raw_date;
+        if (!dataByDate[date]) {
+          dataByDate[date] = [];
+        }
+        dataByDate[date].push(item);
+      });
+
+      // Update webVariantsData
+      webVariantsData.value = dataByDate;
+
+      // Update bookedDates
+      bookedDates.value = Object.keys(dataByDate).map(date => new Date(date));
 
       // Update changeDescriptionsRef
-      changeDescriptionsRef.value = Object.entries(data.result).reduce((acc: Record<string, string>, [date, devices]) => {
-        if (devices && typeof devices === 'object') {
-          const deviceValues = Object.values(devices as Record<string, any[]>);
-          const description = deviceValues.length > 0 && deviceValues[0] && deviceValues[0].length > 0 && deviceValues[0][0].changeDescription
-            ? deviceValues[0][0].changeDescription
-            : 'No description available';
-          acc[date] = description;
-        }
+      changeDescriptionsRef.value = Object.entries(dataByDate).reduce((acc: Record<string, string>, [date, items]) => {
+        acc[date] = items[0].changeDescription; // Assuming all items for a date have the same description
         return acc;
       }, {});
     } else {
@@ -395,6 +400,7 @@ export default {
 
     // getting description from versions
     const getChangeDescription = (day: number, monthIndex: number) => {
+      if (!props.systemOfRecords) return 'No description available';
       const date = new Date(startYear.value, monthIndex, day);
       const dateString = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
       return changeDescriptionsRef.value[dateString] || 'No description available';
@@ -402,27 +408,25 @@ export default {
 
     //  get all the descriptions for the booked days within the selected range
     const getBookedDaysDescriptions = computed(() => {
-      if (!startDate.value || !endDate.value) return [];
+  if (!startDate.value || !endDate.value) return [];
 
-      const start = startDate.value;
-      const end = endDate.value;
+  const start = startDate.value;
+  const end = endDate.value;
 
-      return Object.entries(webVariantsData.value)
-        .filter(([date]) => {
-          const currentDate = new Date(date);
-          return currentDate >= start && currentDate <= end;
-        })
-        .map(([date, devices]) => {
-          const deviceValues = Object.values(devices as Record<string, any[]>);
-          const description = deviceValues.length > 0 && deviceValues[0].length > 0
-            ? deviceValues[0][0].changeDescription
-            : 'No description available';
-          return {
-            date: new Date(date),
-            description
-          };
-        });
+  return Object.entries(webVariantsData.value)
+    .filter(([date]) => {
+      const currentDate = new Date(date);
+      return currentDate >= start && currentDate <= end;
+    })
+    .flatMap(([date, items]) => {
+      // Assuming all items for a date have the same description
+      const description = items[0]?.changeDescription || 'No description available';
+      return {
+        date: new Date(date),
+        description
+      };
     });
+});
 
     // toggling date button (visible / hidden)
     const toggleDatePickerVisibility = () => {
@@ -472,13 +476,13 @@ export default {
 
     // checking if there is a booked day
     const isBooked = (day: number, month: number) => {
-      return bookedDates.value.some(
-        (bookedDate: Date) =>
-          bookedDate.getDate() === day &&
-          bookedDate.getMonth() === month &&
-          bookedDate.getFullYear() === startYear.value
-      );
-    };
+  return bookedDates.value.some(
+    (bookedDate: Date) =>
+      bookedDate.getDate() === day &&
+      bookedDate.getMonth() === month &&
+      bookedDate.getFullYear() === startYear.value
+  );
+};
 
     // showing of tooltip
     const showTooltip = (index: number) => {
@@ -605,87 +609,94 @@ export default {
 
     //  button that applies / save date range
     const applyDateRange = () => {
-      let period = "range";
-      let date = "";
+  let period = "range";
+  let date = "";
 
-      let downloadedUrls: Record<string, any[]> = {};
+  let downloadedUrls: Record<string, any[]> = {};
 
-      if (startDate.value && endDate.value) {
-        date = `${startDate.value.toLocaleDateString()} - ${endDate.value.toLocaleDateString()}`;
-        localStorage.setItem('selectedStartDate', startDate.value.toISOString());
-        localStorage.setItem('selectedEndDate', endDate.value.toISOString());
+  if (startDate.value && endDate.value) {
+    date = `${startDate.value.toLocaleDateString()} - ${endDate.value.toLocaleDateString()}`;
+    localStorage.setItem('selectedStartDate', startDate.value.toISOString());
+    localStorage.setItem('selectedEndDate', endDate.value.toISOString());
 
-        // Filter webVariantsData for the selected date range
-        Object.entries(webVariantsData.value).forEach(([date, data]) => {
-          const currentDate = new Date(date);
-          if (currentDate >= startDate.value! && currentDate <= endDate.value!) {
-            Object.entries(data as Record<string, any[]>).forEach(([deviceType, deviceData]) => {
-              if (deviceData.length > 0) {
-                if (!downloadedUrls[deviceType]) {
-                  downloadedUrls[deviceType] = [];
-                }
-                downloadedUrls[deviceType].push(...deviceData);
-              }
-            });
+    // Filter webVariantsData for the selected date range
+    Object.entries(webVariantsData.value).forEach(([date, data]) => {
+      const currentDate = new Date(date);
+      if (currentDate >= startDate.value! && currentDate <= endDate.value!) {
+        data.forEach((item: any) => {
+          const deviceType = item.s3_path_url.includes('desktop') ? 'desktop' :
+                             item.s3_path_url.includes('mobile') ? 'mobile' :
+                             item.s3_path_url.includes('tablet') ? 'tablet' : 'other';
+          
+          if (!downloadedUrls[deviceType]) {
+            downloadedUrls[deviceType] = [];
           }
+          downloadedUrls[deviceType].push(item);
         });
-      } else if (startDate.value) {
-        period = "day";
-        date = startDate.value.toLocaleDateString();
-        localStorage.setItem('selectedStartDate', startDate.value.toISOString());
-        localStorage.setItem('selectedEndDate', startDate.value.toISOString());
+      }
+    });
+  } else if (startDate.value) {
+    period = "day";
+    date = startDate.value.toLocaleDateString();
+    localStorage.setItem('selectedStartDate', startDate.value.toISOString());
+    localStorage.setItem('selectedEndDate', startDate.value.toISOString());
 
-        // Get data for the single selected date
-        const dateString = startDate.value.toISOString().split('T')[0];
-        if (webVariantsData.value[dateString]) {
-          Object.entries(webVariantsData.value[dateString] as Record<string, any[]>).forEach(([deviceType, deviceData]) => {
-            if (deviceData.length > 0) {
-              downloadedUrls[deviceType] = deviceData;
-            }
-          });
+    // Get data for the single selected date
+    const dateString = startDate.value.toISOString().split('T')[0];
+    if (webVariantsData.value[dateString]) {
+      webVariantsData.value[dateString].forEach((item: any) => {
+        const deviceType = item.s3_path_url.includes('desktop') ? 'desktop' :
+                           item.s3_path_url.includes('mobile') ? 'mobile' :
+                           item.s3_path_url.includes('tablet') ? 'tablet' : 'other';
+        
+        if (!downloadedUrls[deviceType]) {
+          downloadedUrls[deviceType] = [];
         }
-      }
+        downloadedUrls[deviceType].push(item);
+      });
+    }
+  }
 
-      appliedDateRange.value = date;
-      toggleDatePickerVisibility();
+  appliedDateRange.value = date;
+  toggleDatePickerVisibility();
 
-      const dateValue = period === "range"
-        ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]}`
-        : startDate.value!.toISOString().split("T")[0];
+  const dateValue = period === "range"
+    ? `${startDate.value!.toISOString().split("T")[0]},${endDate.value!.toISOString().split("T")[0]}`
+    : startDate.value!.toISOString().split("T")[0];
 
-      const url = new URL(window.location.href);
-      const fragment = url.hash.substring(1);
-      const fragmentParams = new URLSearchParams(fragment);
+  const url = new URL(window.location.href);
+  const fragment = url.hash.substring(1);
+  const fragmentParams = new URLSearchParams(fragment);
 
-      if (fragment.startsWith('/')) {
-        fragmentParams.delete('');
-      }
+  if (fragment.startsWith('/')) {
+    fragmentParams.delete('');
+  }
 
-      fragmentParams.set('period', period);
-      fragmentParams.set('date', dateValue);
+  fragmentParams.set('period', period);
+  fragmentParams.set('date', dateValue);
 
-      url.hash = `?${fragmentParams.toString().replace(/%2C/g, ',')}`;
+  url.hash = `?${fragmentParams.toString().replace(/%2C/g, ',')}`;
 
-      const data: {
-        period: string;
-        date: string;
-        url: string;
-        downloadedUrls?: Record<string, any[]>;
-      } = {
-        period,
-        date: dateValue,
-        url: url.toString(),
-      };
+  const data: {
+    period: string;
+    date: string;
+    url: string;
+    downloadedUrls?: Record<string, any[]>;
+  } = {
+    period,
+    date: dateValue,
+    url: url.toString(),
+  };
 
-      // Only add downloadedUrls if there are any
-      if (Object.keys(downloadedUrls).length > 0) {
-        data.downloadedUrls = downloadedUrls;
-      }
+  // Only add downloadedUrls if there are any
+  if (Object.keys(downloadedUrls).length > 0) {
+    data.downloadedUrls = downloadedUrls;
+  }
 
-      const plainData = JSON.parse(JSON.stringify(data));
-      console.log("Emitted data:", plainData);
-      emit("on-filter-date-change", data);
-    };
+  const plainData = JSON.parse(JSON.stringify(data));
+  console.log("Emitted data:", plainData);
+  emit("on-filter-date-change", data);
+};
 
 
     // highlighting selected date range
@@ -736,28 +747,22 @@ export default {
     };
 
     const appliedHasBookedDaysInRange = computed(() => {
-      if (!appliedDateRange.value) {
-        return false;
-      }
-      const [start, end] = appliedDateRange.value
-        .split(" - ")
-        .map((date: string) => new Date(date));
-      return bookedDates.value.some(
-        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
-      );
-    });
+  if (!appliedDateRange.value) return false;
+  const [start, end] = appliedDateRange.value.split(" - ").map(date => new Date(date));
+  return Object.keys(webVariantsData.value).some(date => {
+    const currentDate = new Date(date);
+    return currentDate >= start && currentDate <= end;
+  });
+});
 
-    const appliedBookedDaysCount = computed(() => {
-      if (!appliedDateRange.value) {
-        return 0;
-      }
-      const [start, end] = appliedDateRange.value
-        .split(" - ")
-        .map((date: string) => new Date(date));
-      return bookedDates.value.filter(
-        (bookedDate: Date) => bookedDate >= start && bookedDate <= end
-      ).length;
-    });
+const appliedBookedDaysCount = computed(() => {
+  if (!appliedDateRange.value) return 0;
+  const [start, end] = appliedDateRange.value.split(" - ").map(date => new Date(date));
+  return Object.keys(webVariantsData.value).filter(date => {
+    const currentDate = new Date(date);
+    return currentDate >= start && currentDate <= end;
+  }).length;
+});
 
     const formatRange = (start: Date | null, end: Date | null) => {
       const startString = start
