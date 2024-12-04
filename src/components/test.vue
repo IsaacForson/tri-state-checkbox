@@ -214,7 +214,6 @@ export default {
     const changeDescriptionsRef: Ref<Record<string, string>> = ref({});
     const webVariantsData: Ref<Record<string, any>> = ref({});
     const tooltipVisible: Ref<DateTooltip> = ref({});
-    // const tooltipVisible = ref<{ [key: number]: boolean }>({});
     onMounted(async () => {
       const { startDate: defaultStartDate, endDate: defaultEndDate } = getDefaultDatesFromUrl();
 
