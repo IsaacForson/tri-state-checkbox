@@ -131,7 +131,7 @@ const dateInputs = {
   end: ''
 }
 const showDropdown = ref(false)
-const selectedRange = ref('Last 7 Days')
+const selectedRange = ref('Last 30 Days')
 const isCalendarVisible = ref(false)
 const startDateInput = ref('')
 const endDateInput = ref('')
@@ -219,6 +219,7 @@ const selectDate = (date) => {
     endDate.value = null;
     startDateInput.value = format(date, 'MMM d, yyyy');
     endDateInput.value = '';
+    selectedRange.value = 'Custom'; // Set to custom when manually selecting dates
   } else {
     if (isBefore(date, startDate.value)) {
       endDate.value = startDate.value;
@@ -440,11 +441,18 @@ const getBookedDaysDescriptions = computed(() => {
 
 const applyDateRange = () => {
   let period = endDate.value ? "range" : "day"
-  let date = ""
   let downloadedUrls = {}
 
+  // Determine what text to display
+  if (selectedRange.value !== 'Custom') {
+    // For preset ranges, show the selected range name
+    appliedDateRange.value = selectedRange.value
+  } else {
+    // For custom dates, show the date range
+    appliedDateRange.value = `${format(startDate.value, 'M/d/yyyy')} - ${format(endDate.value, 'M/d/yyyy')}`
+  }
+
   if (startDate.value && endDate.value) {
-    date = `${format(startDate.value, 'M/d/yyyy')} - ${format(endDate.value, 'M/d/yyyy')}`
     localStorage.setItem('selectedStartDate', startDate.value.toISOString())
     localStorage.setItem('selectedEndDate', endDate.value.toISOString())
 
@@ -464,8 +472,6 @@ const applyDateRange = () => {
       }
     })
   }
-
-  appliedDateRange.value = date
   
   const data = {
     period,
@@ -483,6 +489,7 @@ const applyDateRange = () => {
   console.log("Emitted data:", plainData);
   emit("on-filter-date-change", data);
 }
+
 
 const applyAndClose = () => {
   applyDateRange()
@@ -660,10 +667,19 @@ onUnmounted(() => {
   width: 120px;
   color: #7F7F7F;
 }
+.new_heatmap_calendar_input::placeholder {
+
+  font-size: 15px;
+  text-transform: lowercase;
+  color: #7F7F7F;
+}
 
 .new_heatmap_calendar_quick-select {
   position: relative;
   margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .new_heatmap_calendar_quick-select-button {
@@ -681,15 +697,17 @@ onUnmounted(() => {
 }
 
 .new_heatmap_calendar_dropdown-menu {
+  /* Remove these properties:
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
+  */
   background: white;
   border: 1px solid #E6E7E8;
   border-radius: 8px;
-  margin-top: 4px;
   z-index: 10;
+  width: 100%; /* Ensure it takes full width */
 }
 
 .new_heatmap_calendar_dropdown-menu div {
