@@ -11,7 +11,6 @@
     </button>
 
     <div v-if="isCalendarVisible" class="calendar-container">
-      <!-- Header -->
       <div class="calendar-header">
         <button class="nav-button" @click="previousMonth">
           <span><img style="width: 24px;" src="https://i.ibb.co/9pxmXKv/Arrow-Right-1.png" alt=""></span>
@@ -55,10 +54,12 @@
           </span>
         </button>
         <div v-if="showDropdown" class="dropdown-menu" @click.stop>
+          <div @click="selectRange('Today')">Today</div>
+          <div @click="selectRange('Yesterday')">Yesterday</div>
           <div @click="selectRange('Last 7 Days')">Last 7 Days</div>
           <div @click="selectRange('Last 30 Days')">Last 30 Days</div>
           <div @click="selectRange('Last 90 Days')">Last 90 Days</div>
-          <div @click="selectRange('Custom')">Custom</div>
+          <div @click="selectRange('Last 365 Days')">Last 365 Days</div>
         </div>
       </div>
 
@@ -68,24 +69,21 @@
           {{ weekDay }}
         </div>
 
-        <div
-  v-for="day in calendarDays"
-  :key="day.date"
-  class="day"
-  :class="{
-    'selected': isSelected(day.date),
-    'both-dates-selected': startDate && endDate && isSelected(day.date),
-    'in-range': isInRange(day.date),
-    'today': isToday(day.date),
-    'disabled': !isSameMonth(day.date, currentMonth),
-    'booked': isBooked(day.date),
-    'range-start': isRangeStart(day.date),
-    'range-end': isRangeEnd(day.date)
-  }"
-  @click="selectDate(day.date)"
-  @mouseenter="showTooltip(day.date)"
-  @mouseleave="hideTooltip"
->
+        <div v-for="day in calendarDays" :key="day.date" class="day"
+        :class="{
+          'selected': isSelected(day.date),
+          'both-dates-selected': startDate && endDate && isSelected(day.date),
+          'in-range': isInRange(day.date),
+          'today': isToday(day.date),
+          'disabled': !isSameMonth(day.date, currentMonth),
+          'booked': isBooked(day.date),
+          'range-start': isRangeStart(day.date),
+          'range-end': isRangeEnd(day.date)
+        }"
+        @click="selectDate(day.date)"
+        @mouseenter="showTooltip(day.date)"
+        @mouseleave="hideTooltip"
+      >
 <span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="base-background"></span>
   <span v-if="isRangeStart(day.date) || isRangeEnd(day.date)" class="overlay-background"></span>
   {{ format(day.date, 'd') }}
@@ -110,25 +108,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { 
-  format,
-  parse,
-  isValid,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  startOfWeek,
-  endOfWeek,
-  isSameMonth,
-  isToday,
-  addMonths,
-  subMonths,
-  subDays,
-  isBefore,
-  isAfter,
-  isSameDay,
-  differenceInDays
-} from 'date-fns'
+import { format, parse, isValid, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isToday, addMonths, subMonths, subDays, isBefore, isAfter, isSameDay, differenceInDays } from 'date-fns'
 
 const props = defineProps({
   systemOfRecords: {
@@ -303,13 +283,23 @@ const checkCustomRange = () => {
   const diffDays = differenceInDays(endDate.value, startDate.value)
   const today = new Date()
   
-  if(isSameDay(endDate.value, today)) {
+  if(isSameDay(startDate.value, endDate.value)) {
+    if(isSameDay(startDate.value, today)) {
+      selectedRange.value = 'Today'
+    } else if(isSameDay(startDate.value, subDays(today, 1))) {
+      selectedRange.value = 'Yesterday'
+    } else {
+      selectedRange.value = 'Custom'
+    }
+  } else if(isSameDay(endDate.value, today)) {
     if(diffDays === 6) {
       selectedRange.value = 'Last 7 Days'
     } else if(diffDays === 29) {
-      selectedRange.value = 'Last 30 Days' 
+      selectedRange.value = 'Last 30 Days'
     } else if(diffDays === 89) {
       selectedRange.value = 'Last 90 Days'
+    } else if(diffDays === 364) {
+      selectedRange.value = 'Last 365 Days'
     } else {
       selectedRange.value = 'Custom'
     }
@@ -327,6 +317,15 @@ const selectRange = (range) => {
   const today = new Date()
   
   switch (range) {
+    case 'Today':
+      startDate.value = today
+      endDate.value = today
+      break
+    case 'Yesterday':
+      const yesterday = subDays(today, 1)
+      startDate.value = yesterday
+      endDate.value = yesterday
+      break
     case 'Last 7 Days':
       endDate.value = today
       startDate.value = subDays(today, 6)
@@ -338,6 +337,10 @@ const selectRange = (range) => {
     case 'Last 90 Days':
       endDate.value = today
       startDate.value = subDays(today, 89)
+      break
+    case 'Last 365 Days':
+      endDate.value = today
+      startDate.value = subDays(today, 364)
       break
     case 'Custom':
       startDate.value = null
@@ -789,9 +792,9 @@ onMounted(async () => {
   z-index: 2;
 }
 
+
 .day.both-dates-selected {
   background: #DAFBED;
-  
 }
 
 .day.in-range {
@@ -810,6 +813,13 @@ onMounted(async () => {
   bottom: 0;
   background: #DAFBED;
   z-index: -1;
+}
+
+.day.range-end::before {
+  background: transparent;
+}
+.day.range-start::before {
+  background: transparent;
 }
 
 .day.range-start {
