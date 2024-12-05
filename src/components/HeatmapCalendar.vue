@@ -642,8 +642,6 @@ onMounted(async () => {
   // Set the component's date values
   startDate.value = start;
   endDate.value = end;
-  
-  // Check the custom range to set the correct selectedRange
   checkCustomRange();
   
   // Set input field values
@@ -764,7 +762,7 @@ onUnmounted(() => {
   padding: 12px;
   border: 1px solid #E6E7E8;
   border-radius: 8px;
-  background: white;
+  background: #FBFBFB;
   text-align: left;
   display: flex;
   justify-content: space-between;
@@ -774,17 +772,11 @@ onUnmounted(() => {
 }
 
 .new_heatmap_calendar_dropdown-menu {
-  /* Remove these properties:
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  */
   background: white;
   border: 1px solid #E6E7E8;
   border-radius: 8px;
   z-index: 10;
-  width: 100%; /* Ensure it takes full width */
+  width: 100%;
 }
 
 .new_heatmap_calendar_dropdown-menu div {
