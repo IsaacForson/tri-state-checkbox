@@ -1,12 +1,17 @@
 <template>
   <div>
     <button class="new_heatmap_calendar_date-trigger" @click="toggleCalendar">
-      <svg style="margin-right: 10px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <svg style="margin-right: 10px" xmlns="http://www.w3.org/2000/svg" width="20" viewBox="0 0 24 24" fill="none">
         <path d="M7.25 17.5534V17.4688M12.3125 17.5534V17.4688M12.3125 12.9688V12.8842M16.8125 12.9688V12.8842M3.875 8.46875H19.625M5.91071 2V3.68771M17.375 2V3.6875M17.375 3.6875H6.125C4.26104 3.6875 2.75 5.19854 2.75 7.0625V18.3126C2.75 20.1766 4.26104 21.6876 6.125 21.6876H17.375C19.239 21.6876 20.75 20.1766 20.75 18.3126L20.75 7.0625C20.75 5.19854 19.239 3.6875 17.375 3.6875Z" stroke="#4D5861" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       {{ appliedDateRange }}
       <span v-if="hasBookedDaysInRange" class="new_heatmap_calendar_booked-count">
          {{ bookedDaysCount }}
+      </span>
+      <span class="new_heatmap_calendar_dropdown-arrow" 
+      :class="{ 'flipped': isCalendarVisible }" 
+      style="margin-left: 10px;">
+      <img style="width: 16px;" src="https://i.ibb.co/bRszW9x/Drop.png" alt="">
       </span>
     </button>
 
@@ -43,22 +48,25 @@
 
       <div class="new_heatmap_calendar_quick-select">
         <button 
-          class="new_heatmap_calendar_quick-select-button" 
-          @click="toggleDropdown"
-        >
-          {{ selectedRange }}
-          <span class="new_heatmap_calendar_dropdown-arrow">
-            <img style="width: 16px;" src="https://i.ibb.co/bRszW9x/Drop.png" alt="">
-          </span>
-        </button>
-        <div v-if="showDropdown" class="new_heatmap_calendar_dropdown-menu" @click.stop>
-          <div @click="selectRange('Today')">Today</div>
-          <div @click="selectRange('Yesterday')">Yesterday</div>
-          <div @click="selectRange('Last 7 Days')">Last 7 Days</div>
-          <div @click="selectRange('Last 30 Days')">Last 30 Days</div>
-          <div @click="selectRange('Last 90 Days')">Last 90 Days</div>
-          <div @click="selectRange('Last 365 Days')">Last 365 Days</div>
-        </div>
+            class="new_heatmap_calendar_quick-select-button" 
+            @click="toggleDropdown">
+            {{ selectedRange }}
+            <span class="new_heatmap_calendar_dropdown-arrow"
+                  :class="{ 'flipped': showDropdown }">
+              <img style="width: 16px;" src="https://i.ibb.co/bRszW9x/Drop.png" alt="">
+            </span>
+          </button>
+          <div v-if="showDropdown" class="new_heatmap_calendar_dropdown-menu" @click.stop>
+            <div @click="selectRange('Today')">Today</div>
+            <div @click="selectRange('Yesterday')">Yesterday</div>
+            <div @click="selectRange('Last 7 Days')">Last 7 Days</div>
+            <div @click="selectRange('Last Week')">Last Week</div>
+            <div @click="selectRange('Last 30 Days')">Last 30 Days</div>
+            <div @click="selectRange('Last Month')">Last Month</div>
+            <div @click="selectRange('Last 90 Days')">Last 90 Days</div>
+            <div @click="selectRange('Last 365 Days')">Last 365 Days</div>
+            <div @click="selectRange('Last Year')">Last Year</div>
+          </div>
       </div>
 
       <div class="new_heatmap_calendar_grid">
@@ -107,7 +115,27 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { format, parse, isValid, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isToday, addMonths, subMonths, subDays, isBefore, isAfter, isSameDay, differenceInDays } from 'date-fns'
+import { format, 
+  parse, 
+  isValid, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  startOfWeek, 
+  endOfWeek,
+  startOfYear,
+  endOfYear,
+  isSameMonth, 
+  isToday, 
+  addMonths, 
+  subMonths,
+  subYears,
+  subDays, 
+  isBefore, 
+  isAfter, 
+  isSameDay, 
+  differenceInDays
+ } from 'date-fns'
 
 const props = defineProps({
   systemOfRecords: {
@@ -219,7 +247,7 @@ const selectDate = (date) => {
     endDate.value = null;
     startDateInput.value = format(date, 'MMM d, yyyy');
     endDateInput.value = '';
-    selectedRange.value = 'Custom'; // Set to custom when manually selecting dates
+    selectedRange.value = 'Custom';
   } else {
     if (isBefore(date, startDate.value)) {
       endDate.value = startDate.value;
@@ -304,7 +332,28 @@ const checkCustomRange = () => {
       selectedRange.value = 'Custom'
     }
   } else {
-    selectedRange.value = 'Custom'
+    // Check for Last Week
+    const lastWeekEnd = startOfWeek(subDays(today, 7), { weekStartsOn: 1 })
+    const lastWeekStart = startOfWeek(lastWeekEnd, { weekStartsOn: 1 })
+    if(isSameDay(startDate.value, lastWeekStart) && isSameDay(endDate.value, endOfWeek(lastWeekEnd, { weekStartsOn: 1 }))) {
+      selectedRange.value = 'Last Week'
+    } 
+    // Check for Last Month
+    else {
+      const lastMonth = subMonths(today, 1)
+      if(isSameDay(startDate.value, startOfMonth(lastMonth)) && isSameDay(endDate.value, endOfMonth(lastMonth))) {
+        selectedRange.value = 'Last Month'
+      }
+      // Check for Last Year
+      else {
+        const lastYear = subYears(today, 1)
+        if(isSameDay(startDate.value, startOfYear(lastYear)) && isSameDay(endDate.value, endOfYear(lastYear))) {
+          selectedRange.value = 'Last Year'
+        } else {
+          selectedRange.value = 'Custom'
+        }
+      }
+    }
   }
 }
 
@@ -330,9 +379,21 @@ const selectRange = (range) => {
       endDate.value = today
       startDate.value = subDays(today, 6)
       break
+    case 'Last Week':
+      // Get last week's Monday to Sunday
+      const lastWeekEnd = startOfWeek(subDays(today, 7), { weekStartsOn: 1 })
+      startDate.value = startOfWeek(lastWeekEnd, { weekStartsOn: 1 })
+      endDate.value = endOfWeek(lastWeekEnd, { weekStartsOn: 1 })
+      break
     case 'Last 30 Days':
       endDate.value = today
       startDate.value = subDays(today, 29)
+      break
+    case 'Last Month':
+      // Get the first and last day of previous month
+      const lastMonth = subMonths(today, 1)
+      startDate.value = startOfMonth(lastMonth)
+      endDate.value = endOfMonth(lastMonth)
       break
     case 'Last 90 Days':
       endDate.value = today
@@ -341,6 +402,12 @@ const selectRange = (range) => {
     case 'Last 365 Days':
       endDate.value = today
       startDate.value = subDays(today, 364)
+      break
+    case 'Last Year':
+      // Get the first and last day of previous year
+      const lastYear = subYears(today, 1)
+      startDate.value = startOfYear(lastYear)
+      endDate.value = endOfYear(lastYear)
       break
     case 'Custom':
       startDate.value = null
@@ -443,18 +510,20 @@ const applyDateRange = () => {
   let period = endDate.value ? "range" : "day"
   let downloadedUrls = {}
 
-  // Determine what text to display
-  if (selectedRange.value !== 'Custom') {
-    // For preset ranges, show the selected range name
-    appliedDateRange.value = selectedRange.value
-  } else {
+  // Determine what text to display based on selectedRange
+  if (selectedRange.value === 'Custom') {
     // For custom dates, show the date range
     appliedDateRange.value = `${format(startDate.value, 'M/d/yyyy')} - ${format(endDate.value, 'M/d/yyyy')}`
+  } else {
+    // For preset ranges, show the selected range name
+    appliedDateRange.value = selectedRange.value
   }
 
   if (startDate.value && endDate.value) {
     localStorage.setItem('selectedStartDate', startDate.value.toISOString())
     localStorage.setItem('selectedEndDate', endDate.value.toISOString())
+    // Also store the selectedRange text
+    localStorage.setItem('selectedRangeText', selectedRange.value)
 
     Object.entries(webVariantsData.value).forEach(([date, data]) => {
       const currentDate = new Date(date)
@@ -574,13 +643,22 @@ onMounted(async () => {
   startDate.value = start;
   endDate.value = end;
   
-  // Update the displayed date range
-  dateRange.value = `${format(start, 'MM/dd/yyyy')} - ${format(end, 'MM/dd/yyyy')}`;
-  appliedDateRange.value = dateRange.value;
-
-  // Set the input field values
+  // Check the custom range to set the correct selectedRange
+  checkCustomRange();
+  
+  // Set input field values
   startDateInput.value = format(start, 'MMM d, yyyy');
   endDateInput.value = format(end, 'MMM d, yyyy');
+
+  // Get the stored range text or calculate it
+  const storedRangeText = localStorage.getItem('selectedRangeText');
+  if (storedRangeText && selectedRange.value !== 'Custom') {
+    appliedDateRange.value = storedRangeText;
+  } else if (selectedRange.value === 'Custom') {
+    appliedDateRange.value = `${format(start, 'M/d/yyyy')} - ${format(end, 'M/d/yyyy')}`;
+  } else {
+    appliedDateRange.value = selectedRange.value;
+  }
 
   // Add event listener for clicks outside calendar
   document.addEventListener('click', handleClickOutside);
@@ -879,5 +957,15 @@ onUnmounted(() => {
 .new_heatmap_calendar_apply-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* flip */
+.new_heatmap_calendar_dropdown-arrow {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.new_heatmap_calendar_dropdown-arrow.flipped {
+  transform: rotate(180deg);
 }
 </style>
