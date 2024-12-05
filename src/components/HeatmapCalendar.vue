@@ -60,11 +60,11 @@
             <div @click="selectRange('Today')">Today</div>
             <div @click="selectRange('Yesterday')">Yesterday</div>
             <div @click="selectRange('Last 7 Days')">Last 7 Days</div>
-            <div @click="selectRange('Last Week')">Last Week</div>
             <div @click="selectRange('Last 30 Days')">Last 30 Days</div>
-            <div @click="selectRange('Last Month')">Last Month</div>
             <div @click="selectRange('Last 90 Days')">Last 90 Days</div>
             <div @click="selectRange('Last 365 Days')">Last 365 Days</div>
+            <div @click="selectRange('Last Week')">Last Week</div>
+            <div @click="selectRange('Last Month')">Last Month</div>
             <div @click="selectRange('Last Year')">Last Year</div>
           </div>
       </div>
