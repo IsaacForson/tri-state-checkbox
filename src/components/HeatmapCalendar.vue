@@ -103,7 +103,7 @@
       </div>
 
       <div class="new_heatmap_calendar_action-buttons">
-        <button class="new_heatmap_calendar_cancel-button" @click="cancel">Cancel</button>
+        <button class="new_heatmap_calendar_cancel-button" @click="cancel" style="margin-right: 25px;">Cancel</button>
         <button style="display: flex;" class="new_heatmap_calendar_apply-button" @click="applyAndClose">
           <span>Apply</span>
           <img class=".new_heatmap_calendar_apply-button-img" src="https://i.ibb.co/TL3Cd6G/system-solid-31-check-hover-check-1.png" alt="">
@@ -699,7 +699,7 @@ onUnmounted(() => {
 
 .new_heatmap_calendar_container {
   position: absolute;
-  width: 311px;
+  width: 250px;
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -915,7 +915,7 @@ onUnmounted(() => {
 
 .new_heatmap_calendar_action-buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content:flex-end;
   margin-top: 24px;
 }
 
@@ -929,8 +929,8 @@ onUnmounted(() => {
 }
 
 .new_heatmap_calendar_cancel-button {
-  background: white;
-  border: 1px solid #E6E7E8;
+  background: transparent;
+  border: none;
   color: #666;
 }
 
