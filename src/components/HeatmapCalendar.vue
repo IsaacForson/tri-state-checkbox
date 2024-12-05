@@ -699,7 +699,7 @@ onUnmounted(() => {
 
 .new_heatmap_calendar_container {
   position: absolute;
-  width: 250px;
+  width: 270px;
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -741,13 +741,12 @@ onUnmounted(() => {
   padding: 12px;
   border: 1px solid #E6E7E8;
   border-radius: 8px;
-  font-size: 15px;
-  width: 120px;
+  font-size: 14px;
+  width: 99px;
   color: #7F7F7F;
 }
 .new_heatmap_calendar_input::placeholder {
-
-  font-size: 15px;
+  font-size: 14px;
   text-transform: lowercase;
   color: #7F7F7F;
 }
@@ -802,6 +801,8 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #DDDDDD;
 }
 
 .new_heatmap_calendar_weekday {
@@ -816,7 +817,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   position: relative;
   z-index: 2;
@@ -916,7 +917,7 @@ onUnmounted(() => {
 .new_heatmap_calendar_action-buttons {
   display: flex;
   justify-content:flex-end;
-  margin-top: 24px;
+  margin-top: 18px;
 }
 
 .new_heatmap_calendar_cancel-button,
