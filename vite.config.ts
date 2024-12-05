@@ -11,7 +11,7 @@ export default defineConfig({
       //@ts-ignore
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "HeatmapCalendar",
-      fileName: "heatmap-calendar-component"
+      fileName: "new-heatmap-calendar-component"
     },
     rollupOptions: {
       external: ["vue"],

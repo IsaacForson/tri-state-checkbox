@@ -1,7 +1,7 @@
 {
-  "name": "heatmap-calendar-component",
+  "name": "new-heatmap-calendar-component",
   "private": false,
-  "version": "0.9.48",
+  "version": "0.1.0",
   "type": "module",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
   },
   "keywords": [
     "checkbox",
-    "heatmap-calendar-component",
+    "new-heatmap-calendar-component",
     "material",
     "material-ui",
     "vue3",
@@ -20,13 +20,13 @@
     "dist",
     "src/components/"
   ],
-  "main": "./dist/heatmap-calendar-component.umd.cjs",
-  "module": "./dist/heatmap-calendar-component.js",
+  "main": "./dist/new-heatmap-calendar-component.umd.cjs",
+  "module": "./dist/new-heatmap-calendar-component.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/heatmap-calendar-component.js",
-      "require": "./dist/heatmap-calendar-component.umd.cjs"
+      "import": "./dist/new-heatmap-calendar-component.js",
+      "require": "./dist/new-heatmap-calendar-component.umd.cjs"
     },
     "./dist/style.css": {
       "import": "./dist/style.css",
