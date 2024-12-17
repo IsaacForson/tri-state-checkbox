@@ -76,7 +76,7 @@
 
         <div 
           v-for="day in calendarDays" 
-          :key="day.date" 
+          :key="day.date as any" 
           class="new_heatmap_calendar_day"
           :class="{
             'new_heatmap_calendar_selected': isSelected(day.date),
@@ -113,8 +113,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { format, 
   parse, 
   isValid, 
@@ -151,27 +151,27 @@ const emit = defineEmits(['on-filter-date-change'])
 
 // State
 const currentMonth = ref(new Date())
-const startDate = ref(null)
-const endDate = ref(null)
-const dateRange = ref('')
+const startDate = ref<any>(null)
+const endDate = ref<any>(null)
+/* const dateRange = ref<any>('')
 const dateInputs = {
   start: '',
   end: ''
-}
-const showDropdown = ref(false)
-const selectedRange = ref('Last 30 Days')
-const isCalendarVisible = ref(false)
-const startDateInput = ref('')
-const endDateInput = ref('')
-const activeTooltip = ref(null)
-const appliedDateRange = ref('')
-const webVariantsData = ref({})
-const variants = ref({})
+} */
+const showDropdown = ref<any>(false)
+const selectedRange = ref<any>('Last 30 Days')
+const isCalendarVisible = ref<any>(false)
+const startDateInput = ref<any>('')
+const endDateInput = ref<any>('')
+const activeTooltip = ref<any>(null)
+const appliedDateRange = ref<any>('')
+const webVariantsData = ref<any>({})
+/* const variants = ref({})
 const activeVariantTooltip = ref(null)
-const variantDescriptions = ref({})
-const bookedDates = ref([])
-const changeDescriptionsRef = ref({})
-const currentUrl = ref(window.location.href);
+const variantDescriptions = ref({}) */
+const bookedDates = ref<any>([])
+const changeDescriptionsRef = ref<any>({})
+const currentUrl = ref<any>(window.location.href);
 
 // Computed
 const weekDays = computed(() => {
@@ -241,7 +241,7 @@ const handleEndDateInput = () => {
   }
 }
 
-const selectDate = (date) => {
+const selectDate = (date:any) => {
   if (!startDate.value || (startDate.value && endDate.value)) {
     startDate.value = date;
     endDate.value = null;
@@ -262,14 +262,14 @@ const selectDate = (date) => {
   }
 }
 
-const isSelected = (date) => {
+const isSelected = (date:any) => {
   return (
     (startDate.value && isSameDay(date, startDate.value)) ||
     (endDate.value && isSameDay(date, endDate.value))
   )
 }
 
-const isInRange = (date) => {
+const isInRange = (date:any) => {
   if (!startDate.value || !endDate.value) return false
   return (
     isAfter(date, startDate.value) &&
@@ -277,20 +277,20 @@ const isInRange = (date) => {
   )
 }
 
-const isRangeStart = (date) => {
+const isRangeStart = (date:any) => {
   return startDate.value && isSameDay(date, startDate.value)
 }
 
-const isRangeEnd = (date) => {
+const isRangeEnd = (date:any) => {
   return endDate.value && isSameDay(date, endDate.value)
 }
 
-const isBooked = (date) => {
+const isBooked = (date:any) => {
   const dateString = format(date, 'yyyy-MM-dd')
   return !!props.webVariantsData[dateString]
 }
 
-const showTooltip = (date) => {
+const showTooltip = (date:any) => {
   if(isBooked(date)) {
     activeTooltip.value = format(date, 'yyyy-MM-dd')
   }
@@ -300,7 +300,7 @@ const hideTooltip = () => {
   activeTooltip.value = null
 }
 
-const getBookedDescription = (date) => {
+const getBookedDescription = (date:any) => {
   const dateString = format(date, 'yyyy-MM-dd')
   return props.webVariantsData[dateString]?.[0]?.changeDescription || ''
 }
@@ -361,7 +361,7 @@ const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
 }
 
-const selectRange = (range) => {
+const selectRange = (range:any) => {
   selectedRange.value = range
   const today = new Date()
   
@@ -424,7 +424,7 @@ const selectRange = (range) => {
   showDropdown.value = false
 }
 
-const constructUrl = (period) => {
+const constructUrl = (period:any) => {
   const url = new URL(window.location.href)
   const fragment = url.hash.substring(1)
   const fragmentParams = new URLSearchParams(fragment)
@@ -442,7 +442,7 @@ const constructUrl = (period) => {
   return url.toString()
 }
 
-const getItemFromUrl = (item) => {
+const getItemFromUrl = (item:any) => {
   const parsedUrl = new URL(currentUrl.value);
   const searchParams = new URLSearchParams(parsedUrl.search);
   const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
@@ -465,9 +465,9 @@ async function loadWebVariants() {
     const data = await response.json()
 
     if (data.status === "success" && Array.isArray(data.result)) {
-      const dataByDate = {}
+      const dataByDate : any = {}
       
-      data.result.forEach(item => {
+      data.result.forEach((item:any) => {
         const date = item.raw_date
         if (!dataByDate[date]) {
           dataByDate[date] = []
@@ -478,7 +478,7 @@ async function loadWebVariants() {
       webVariantsData.value = dataByDate
       bookedDates.value = Object.keys(dataByDate).map(date => new Date(date))
       changeDescriptionsRef.value = Object.entries(dataByDate).reduce((acc, [date, items]) => {
-        acc[date] = items[0].changeDescription
+        (acc as any)[date] = (items as any)[0].changeDescription
         return acc
       }, {})
     }
@@ -490,7 +490,7 @@ async function loadWebVariants() {
   }
 }
 
-const getBookedDaysDescriptions = computed(() => {
+/* const getBookedDaysDescriptions = computed(() => {
   if (!startDate.value || !endDate.value) return []
   return Object.entries(webVariantsData.value)
     .filter(([date]) => {
@@ -504,7 +504,7 @@ const getBookedDaysDescriptions = computed(() => {
         description
       }
     })
-})
+}) */
 
 const applyDateRange = () => {
   let period = endDate.value ? "range" : "day"
@@ -528,15 +528,15 @@ const applyDateRange = () => {
     Object.entries(webVariantsData.value).forEach(([date, data]) => {
       const currentDate = new Date(date)
       if (currentDate >= startDate.value && currentDate <= endDate.value) {
-        data.forEach((item) => {
+        (data as any).forEach((item:any) => {
           const deviceType = item.s3_path_url.includes('desktop') ? 'desktop' :
                            item.s3_path_url.includes('mobile') ? 'mobile' :
                            item.s3_path_url.includes('tablet') ? 'tablet' : 'other'
           
-          if (!downloadedUrls[deviceType]) {
-            downloadedUrls[deviceType] = []
+          if (!(downloadedUrls as any)[deviceType]) {
+            (downloadedUrls as any)[deviceType] = []
           }
-          downloadedUrls[deviceType].push(item)
+          (downloadedUrls as any)[deviceType].push(item)
         })
       }
     })
@@ -551,7 +551,7 @@ const applyDateRange = () => {
   }
 
   if (Object.keys(downloadedUrls).length > 0) {
-    data.downloadedUrls = downloadedUrls
+    (data as any).downloadedUrls = downloadedUrls
   }
 
   const plainData = JSON.parse(JSON.stringify(data));
@@ -573,14 +573,14 @@ const cancel = () => {
   isCalendarVisible.value = false
 }
 
-const handleClickOutside = (e) => {
+const handleClickOutside = (e:any) => {
   const calendar = document.querySelector('.new_heatmap_calendar_container')
   const trigger = document.querySelector('.new_heatmap_calendar_date-trigger')
   const dropdown = document.querySelector('.new_heatmap_calendar_dropdown-menu')
   
   if (calendar && 
       !calendar.contains(e.target) && 
-      !trigger.contains(e.target) && 
+      !(trigger as any).contains(e.target) && 
       (!dropdown || !dropdown.contains(e.target))) {
     isCalendarVisible.value = false
   }

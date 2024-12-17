@@ -1,31 +1,47 @@
-import vue from "@vitejs/plugin-vue";
-import * as path from "path";
-import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
-import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import dts from "vite-plugin-dts";
+import { resolve } from "path";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 export default defineConfig({
-  plugins: [vue(), dts(), cssInjectedByJsPlugin()],
+  plugins: [
+    vue(),
+    dts({
+      insertTypesEntry: true,
+      include: ["src/**/*.ts", "src/**/*.vue"],
+      beforeWriteFile: (filePath, content) => {
+        return {
+          filePath: filePath.replace(/\.d\.ts$/, ".d.ts"),
+          content: content,
+        };
+      },
+    }),
+    cssInjectedByJsPlugin(),
+  ],
   build: {
     lib: {
-      //@ts-ignore
-      entry: path.resolve(__dirname, "src/index.ts"),
+      entry: resolve(__dirname, "src/index.ts"),
       name: "HeatmapCalendar",
-      fileName: "new-heatmap-calendar-component"
+      fileName: (format) =>
+        `new-heatmap-calendar-component.${format === "es" ? "es" : "umd"}.${
+          format === "es" ? "js" : "cjs"
+        }`,
     },
     rollupOptions: {
       external: ["vue"],
       output: {
         globals: {
-          vue: "Vue"
-        }
-      }
-    }
+          vue: "Vue",
+        },
+        exports: "named",
+      },
+    },
+    cssCodeSplit: false,
   },
   resolve: {
     alias: {
-      //@ts-ignore
-      "@": path.resolve(__dirname, "src")
-    }
-  }
+      "@": resolve(__dirname, "src"),
+    },
+  },
 });
